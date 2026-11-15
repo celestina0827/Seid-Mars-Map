@@ -1,0 +1,1901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ARES-1 // Campaign · Mount Sharp Ascent</title>
+  
+  <!-- ======================================================================
+       EXTERNAL RESOURCES: Fonts & Chart.js Library
+       ====================================================================== -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Share+Tech+Mono&display=swap">
+  <script src="chart.js"></script>
+  <script>
+    window.Chart || document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js"><\/script>');
+  </script>
+  
+  <style>
+    /* ======================================================================
+       1. GLOBAL VARIABLES & BASE STYLES (Cyberpunk Theme)
+       ====================================================================== */
+    :root {
+      --bg-0: #05080f; --bg-1: #0a111d; --bg-2: #101a2b; --line: #26405c;
+      --text: #e8f5ff; --dim: #a7c4dc;
+      --green: #39ff88; --blue: #38d9ff; --amber: #ffb02e; --red: #ff3b57;
+      --glow-b: 0 0 6px rgba(56,217,255,.55), 0 0 18px rgba(56,217,255,.22);
+      --glow-g: 0 0 6px rgba(57,255,136,.6), 0 0 18px rgba(57,255,136,.28);
+      --glow-a: 0 0 6px rgba(255,176,46,.6), 0 0 18px rgba(255,176,46,.28);
+      --head: "Orbitron", "Rajdhani", "Segoe UI", sans-serif;
+      --mono: "Share Tech Mono", "Consolas", "Menlo", monospace;
+      --pad: 18px; --gap: 16px;
+    }
+
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    html { background: var(--bg-0); }
+    
+    body {
+      margin: 0; 
+      min-height: 100vh; 
+      color: var(--text); 
+      font: 14px/1.5 var(--mono);
+      background:
+        linear-gradient(rgba(56,217,255,.035) 1px, transparent 1px) 0 0 / 48px 48px,
+        linear-gradient(90deg, rgba(56,217,255,.035) 1px, transparent 1px) 0 0 / 48px 48px,
+        radial-gradient(1100px 520px at 80% -10%, rgba(255,176,46,.12), transparent 60%),
+        radial-gradient(900px 500px at 0% 110%, rgba(56,217,255,.08), transparent 60%), 
+        var(--bg-0);
+    }
+
+    /* CRT Scanline Effect Overlay */
+    body::after { 
+      content: ""; 
+      position: fixed; 
+      inset: 0; 
+      pointer-events: none; 
+      z-index: 50;
+      background: repeating-linear-gradient(0deg, rgba(255,255,255,.02) 0 1px, transparent 1px 3px); 
+    }
+    
+    a { color: inherit; } 
+    small { font-size: 12px; }
+    :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+    /* ======================================================================
+       2. LAYOUT COMPONENTS: Header & Panels
+       ====================================================================== */
+    
+    /* Header (Top Navigation) */
+    .top { 
+      position: relative; 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      gap: var(--gap); 
+      flex-wrap: wrap;
+      padding: 12px 24px; 
+      background: linear-gradient(180deg, #0e1727, #09101b); 
+      border-bottom: 1px solid var(--line); 
+    }
+    
+    .top::after { 
+      content: ""; 
+      position: absolute; 
+      left: 0; 
+      right: 0; 
+      bottom: -1px; 
+      height: 2px; 
+      opacity: .75;
+      background: linear-gradient(90deg, var(--amber), transparent 40%, transparent 60%, var(--blue)); 
+    }
+    
+    h1, .panel > h2 { 
+      margin: 0; 
+      font: 700 14px/1.5 var(--head); 
+      letter-spacing: .16em; 
+      text-transform: uppercase; 
+      color: var(--amber); 
+      text-shadow: var(--glow-a); 
+    }
+    
+    .top__sub { margin-top: 2px; font-size: 12px; letter-spacing: .08em; color: var(--dim); }
+    .top__right { display: flex; align-items: center; gap: var(--gap); flex-wrap: wrap; }
+    .stat { font-size: 12px; letter-spacing: .1em; color: var(--dim); }
+    .stat b { font: 700 14px var(--head); color: var(--blue); text-shadow: var(--glow-b); }
+    .stat.is-done b { color: var(--green); text-shadow: var(--glow-g); }
+    
+    .back { 
+      padding: 8px 14px; 
+      font: 700 12px var(--head); 
+      letter-spacing: .14em; 
+      text-decoration: none; 
+      color: var(--blue); 
+      border: 1px solid var(--blue); 
+      transition: .15s; 
+    }
+    .back:hover { background: rgba(56,217,255,.18); color: #fff; box-shadow: var(--glow-b); }
+
+    /* Main Grid Layout */
+    .stage { 
+      display: grid; 
+      gap: var(--gap); 
+      padding: 20px; 
+      grid-template-columns: minmax(320px, 400px) minmax(0, 1fr); 
+      align-items: stretch; 
+    }
+    
+    @media (min-width: 961px) and (min-height: 700px) {
+      body.game { height: 100vh; height: 100dvh; overflow: hidden; display: grid; grid-template-rows: auto minmax(0, 1fr); }
+      body.game .stage { min-height: 0; padding: 16px 20px 20px; }
+      body.game .panel { min-height: 0; }
+      body.game .scenes { flex: 1; min-height: 0; overflow-y: auto; }
+    }
+    @media (max-width: 960px) { .stage { grid-template-columns: minmax(0, 1fr); padding: 12px; } }
+
+    /* Interactive Panels */
+    .panel {
+      position: relative; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 14px; 
+      min-width: 0; 
+      padding: var(--pad);
+      overflow-x: hidden; 
+      overflow-y: auto; 
+      container-type: inline-size;
+      background: linear-gradient(160deg, var(--bg-2), var(--bg-1)); 
+      border: 1px solid rgba(56,217,255,.4);
+      box-shadow: inset 0 0 26px rgba(56,217,255,.05), 0 0 14px rgba(56,217,255,.12);
+    }
+    
+    /* Panel Corners */
+    .panel::before, .panel::after { 
+      content: ""; 
+      position: absolute; 
+      width: 14px; 
+      height: 14px; 
+      pointer-events: none; 
+      border: 2px solid var(--amber); 
+      filter: drop-shadow(0 0 4px var(--amber)); 
+    }
+    .panel::before { top: 0; left: 0; border-right: 0; border-bottom: 0; }
+    .panel::after  { bottom: 0; right: 0; border-left: 0; border-top: 0; }
+    
+    .panel > h2 { 
+      flex: none; 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      flex-wrap: wrap; 
+      gap: 6px 12px; 
+      padding-bottom: 12px; 
+      border-bottom: 1px solid var(--line); 
+    }
+    
+    .h2__t { display: inline-flex; align-items: center; gap: 10px; }
+    .q { padding: 4px 6px; font: 700 12px/1 var(--head); font-style: normal; letter-spacing: .04em; color: var(--bg-0); background: var(--amber); text-shadow: none; box-shadow: var(--glow-a); }
+    .panel > h2 em { font: normal 12px/1.5 var(--mono); letter-spacing: .06em; color: var(--dim); text-shadow: none; }
+    .label { font: 12px/1.5 var(--mono); letter-spacing: .14em; color: var(--dim); text-transform: uppercase; }
+
+    /* Custom Scrollbars */
+    .panel { scrollbar-width: thin; scrollbar-color: #38d9ff #05080f; }
+    .panel::-webkit-scrollbar { width: 8px; height: 8px; }
+    .panel::-webkit-scrollbar-track { background: #05080f; border-left: 1px solid rgba(56,217,255,.18); }
+    .panel::-webkit-scrollbar-thumb { 
+      background: linear-gradient(180deg, #38d9ff, #39ff88); 
+      border-radius: 4px; 
+      box-shadow: inset 0 0 3px rgba(255,255,255,.55), 0 0 8px #38d9ff; 
+    }
+
+    /* ======================================================================
+       3. LEFT PANEL: Route Timeline & Checkpoints
+       ====================================================================== */
+    .mission { 
+      margin: 0; 
+      padding: 10px 12px; 
+      font-size: 12px; 
+      line-height: 1.5; 
+      color: var(--dim); 
+      border-left: 3px solid var(--amber); 
+      background: rgba(255,176,46,.06); 
+    }
+    .mission b { display: block; font: 700 14px var(--head); letter-spacing: .08em; color: #fff; }
+    
+    .progress { flex: none; height: 6px; background: var(--bg-0); border: 1px solid var(--line); }
+    .progress i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--blue), var(--green)); box-shadow: var(--glow-g); transition: width .4s; }
+
+    .route { list-style: none; margin: 0; padding: 0; position: relative; display: grid; gap: 6px; }
+    
+    /* Vertical connecting line */
+    .route::before { 
+      content: ""; 
+      position: absolute; 
+      left: 25px; 
+      top: 20px; 
+      bottom: 20px; 
+      width: 2px;
+      background: repeating-linear-gradient(180deg, var(--line) 0 6px, transparent 6px 10px); 
+    }
+    
+    /* Checkpoint Item */
+    .cp { 
+      --c: var(--green); 
+      position: relative; 
+      display: grid; 
+      grid-template-columns: 40px minmax(0, 1fr) auto; 
+      align-items: center; 
+      gap: 4px 12px; 
+      width: 100%; 
+      padding: 10px 12px 10px 6px;
+      font: inherit; 
+      text-align: left; 
+      color: var(--text); 
+      background: rgba(255,255,255,.02); 
+      border: 1px solid transparent; 
+      cursor: pointer; 
+      transition: .15s; 
+    }
+    .cp[data-sev="warning"] { --c: var(--amber); } 
+    .cp[data-sev="critical"] { --c: var(--red); }
+    .cp:hover { border-color: var(--line); background: rgba(56,217,255,.06); }
+    
+    .cp__n { 
+      position: relative; 
+      z-index: 1; 
+      display: grid; 
+      place-items: center; 
+      width: 40px; 
+      height: 40px; 
+      font: 700 14px var(--head); 
+      color: var(--c);
+      background: var(--bg-0); 
+      border: 2px solid var(--c); 
+      border-radius: 50%; 
+      box-shadow: 0 0 8px color-mix(in srgb, var(--c) 50%, transparent); 
+    }
+    .cp__t b { display: block; font: 700 14px/1.5 var(--head); letter-spacing: .04em; color: #fff; }
+    .cp__t small { color: var(--dim); }
+    .cp__leg { font-size: 12px; color: var(--dim); text-align: right; white-space: nowrap; }
+    
+    .cp.is-visited .cp__n::after { 
+      content: "✓"; 
+      position: absolute; 
+      right: -6px; 
+      top: -6px; 
+      display: grid; 
+      place-items: center; 
+      width: 16px; 
+      height: 16px; 
+      font: 700 12px/1 var(--mono); 
+      color: var(--bg-0); 
+      background: var(--green); 
+      border-radius: 50%; 
+    }
+    .cp.is-active { 
+      border-color: var(--amber); 
+      background: linear-gradient(90deg, rgba(255,176,46,.14), transparent); 
+      box-shadow: inset 3px 0 0 var(--amber); 
+    }
+    .cp.is-active .cp__n { background: var(--c); color: var(--bg-0); }
+
+    /* ======================================================================
+       4. RIGHT PANEL: Briefing Area, Rover POV & Map
+       ====================================================================== */
+    .row2 { display: grid; gap: var(--gap); grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); align-items: stretch; }
+    @container (max-width: 700px) { .row2 { grid-template-columns: minmax(0, 1fr); } }
+
+    /* Rover POV (Simulated Camera Feed) */
+    .pov { 
+      --sky1: #2b1d1a; --sky2: #c9824f; --far: #5a3322; --near: #3a2016; 
+      --ridge: polygon(0 62%, 18% 52%, 34% 60%, 52% 44%, 70% 58%, 100% 48%, 100% 100%, 0 100%);
+      position: relative; 
+      aspect-ratio: 16 / 9; 
+      min-height: 190px; 
+      overflow: hidden; 
+      background: var(--bg-0); 
+      border: 1px solid var(--blue); 
+      box-shadow: var(--glow-b); 
+      isolation: isolate; 
+    }
+    
+    .pov__scene { 
+      position: absolute; 
+      inset: 0; 
+      background: var(--pov-img, none) center / cover, linear-gradient(180deg, var(--sky1), var(--sky2) 62%); 
+      animation: tear 7s steps(1) infinite; 
+    }
+    .pov__scene::before { content: ""; position: absolute; inset: 0; background: var(--far); clip-path: var(--ridge); opacity: .85; }
+    .pov__scene::after { 
+      content: ""; 
+      position: absolute; 
+      left: -5%; 
+      right: -5%; 
+      bottom: 0; 
+      height: 38%; 
+      background: linear-gradient(180deg, var(--near), #140a07); 
+      clip-path: polygon(0 30%, 22% 12%, 45% 28%, 70% 10%, 100% 26%, 100% 100%, 0 100%); 
+    }
+    
+    /* POV Effects Overlay */
+    .pov__fx { 
+      position: absolute; 
+      inset: 0; 
+      pointer-events: none; 
+      z-index: 2;
+      background: repeating-linear-gradient(0deg, rgba(0,0,0,.28) 0 1px, transparent 1px 3px),
+                  radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.65)); 
+    }
+    .pov__noise { 
+      position: absolute; 
+      inset: -10%; 
+      z-index: 2; 
+      opacity: .16; 
+      mix-blend-mode: screen; 
+      pointer-events: none; 
+      animation: noise .5s steps(4) infinite;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E"); 
+    }
+    .pov__bar { 
+      position: absolute; 
+      left: 0; 
+      right: 0; 
+      height: 14%; 
+      z-index: 2; 
+      pointer-events: none; 
+      background: linear-gradient(180deg, transparent, rgba(56,217,255,.22), transparent); 
+      animation: sweep 4.5s linear infinite; 
+    }
+    
+    /* POV UI Elements */
+    .pov__ui { 
+      position: absolute; 
+      inset: 8px; 
+      z-index: 3; 
+      display: grid; 
+      grid-template: auto 1fr auto / 1fr 1fr; 
+      font-size: 12px; 
+      letter-spacing: .08em; 
+      color: var(--blue); 
+      text-shadow: 0 0 6px rgba(56,217,255,.8), 1px 0 rgba(255,59,87,.6), -1px 0 rgba(57,255,136,.6); 
+    }
+    .pov__ui > :nth-child(even) { text-align: right; }
+    .pov__ui > :nth-child(n+3) { align-self: end; }
+    
+    .pov__rec::before { content: "● "; color: var(--red); animation: blink 1s steps(1) infinite; }
+    .pov__cross { 
+      position: absolute; 
+      left: 50%; 
+      top: 50%; 
+      z-index: 3; 
+      width: 36px; 
+      height: 36px; 
+      margin: -18px 0 0 -18px; 
+      border: 1px solid rgba(56,217,255,.7); 
+      border-radius: 50%; 
+    }
+    .pov__cross::before, .pov__cross::after { content: ""; position: absolute; background: rgba(56,217,255,.7); }
+    .pov__cross::before { left: 50%; top: -8px; bottom: -8px; width: 1px; } 
+    .pov__cross::after { top: 50%; left: -8px; right: -8px; height: 1px; }
+    .pov__ph { 
+      position: absolute; 
+      left: 50%; 
+      bottom: 30%; 
+      z-index: 3; 
+      transform: translateX(-50%); 
+      padding: 2px 10px; 
+      font-size: 12px; 
+      letter-spacing: .14em; 
+      white-space: nowrap; 
+      color: var(--amber); 
+      border: 1px dashed var(--amber); 
+      background: rgba(5,8,15,.6); 
+    }
+
+    /* Tactical Map Rendering */
+    .tmap { position: relative; min-height: 190px; border: 1px solid var(--line); background: var(--bg-0); }
+    .tmap svg { display: block; width: 100%; height: 100%; }
+    .tmap .g { stroke: rgba(56,217,255,.16); stroke-width: 1; }
+    .tmap .ring { fill: none; stroke: rgba(56,217,255,.22); stroke-dasharray: 3 4; }
+    .tmap .path { fill: none; stroke: var(--line); stroke-width: 2; stroke-dasharray: 5 5; }
+    .tmap .done { fill: none; stroke: var(--blue); stroke-width: 2; filter: drop-shadow(0 0 3px var(--blue)); }
+    .tmap .pt { fill: var(--bg-0); stroke: var(--blue); stroke-width: 2; cursor: pointer; }
+    .tmap .pt.v { fill: var(--blue); }
+    .tmap .sel { fill: var(--amber); stroke: #fff; stroke-width: 2; filter: drop-shadow(0 0 5px var(--amber)); }
+    .tmap .pulse { 
+      fill: none; 
+      stroke: var(--amber); 
+      stroke-width: 2; 
+      transform-box: fill-box; 
+      transform-origin: center; 
+      animation: ping 1.6s ease-out infinite; 
+    }
+    .tmap text { font: 12px var(--mono); fill: var(--dim); }
+    .tmap text.sel-l { fill: var(--amber); }
+    .tmap__cap { position: absolute; left: 8px; bottom: 6px; font-size: 12px; letter-spacing: .08em; color: var(--dim); }
+
+    .intel { margin: 0; color: #c9d6e3; }
+    .intel::before { content: "SECTOR INTEL ▸ "; color: var(--blue); letter-spacing: .1em; }
+
+    /* ======================================================================
+       5. SCANNER CHARTS & METRICS UI
+       ====================================================================== */
+    .scan { 
+      flex: none; 
+      position: relative; 
+      display: grid; 
+      overflow: hidden; 
+      container-type: inline-size;
+      border: 1px solid rgba(56,217,255,.45); 
+      box-shadow: inset 0 0 28px rgba(56,217,255,.07), 0 0 16px rgba(56,217,255,.14);
+      background:
+        linear-gradient(rgba(56,217,255,.05) 1px, transparent 1px) 0 0 / 28px 28px,
+        linear-gradient(90deg, rgba(56,217,255,.05) 1px, transparent 1px) 0 0 / 28px 28px,
+        radial-gradient(600px 240px at 50% 45%, rgba(56,217,255,.09), transparent 70%), 
+        var(--bg-0); 
+    }
+    
+    .scan::before, .scan::after { 
+      content: ""; 
+      position: absolute; 
+      z-index: 2; 
+      width: 16px; 
+      height: 16px; 
+      pointer-events: none; 
+      border: 2px solid var(--green); 
+      filter: drop-shadow(0 0 4px var(--green)); 
+    }
+    .scan::before { top: 0; left: 0; border-right: 0; border-bottom: 0; }
+    .scan::after { bottom: 0; right: 0; border-left: 0; border-top: 0; }
+
+    .scan__bar { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      flex-wrap: wrap; 
+      gap: 4px 12px; 
+      padding: 8px 14px;
+      font: 700 12px/1.5 var(--head); 
+      letter-spacing: .16em; 
+      text-transform: uppercase; 
+      color: var(--blue); 
+      text-shadow: var(--glow-b);
+      background: rgba(56,217,255,.08); 
+      border-bottom: 1px solid rgba(56,217,255,.35); 
+    }
+    .scan__tag { color: var(--red); text-shadow: 0 0 8px rgba(255,59,87,.7); animation: blink 1.6s steps(1) infinite; }
+
+    .scan__grid { position: relative; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .scan__cell { display: flex; flex-direction: column; gap: 6px; min-width: 0; margin: 0; padding: 12px 12px 8px; }
+    .scan__cell + .scan__cell { border-left: 1px solid rgba(56,217,255,.18); }
+    
+    .scan__cap { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: baseline; 
+      flex-wrap: wrap; 
+      gap: 2px 8px;
+      font: 12px/1.5 var(--mono); 
+      letter-spacing: .08em; 
+      text-transform: uppercase; 
+      color: var(--blue); 
+    }
+    .scan__cap em { font-style: normal; color: rgba(255,255,255,.55); }
+    
+    @container (max-width: 560px) {
+      .scan__grid { grid-template-columns: minmax(0, 1fr); }
+      .scan__cell + .scan__cell { border-left: 0; border-top: 1px solid rgba(56,217,255,.18); }
+    }
+
+    .scan__box { position: relative; height: 270px; min-width: 0; }
+    .scan__box canvas { display: block; }
+    .scan__box p { margin: 0; padding-top: 40px; text-align: center; color: var(--amber); letter-spacing: .1em; }
+
+    .scan__grid::after { 
+      content: ""; 
+      position: absolute; 
+      z-index: 1; 
+      left: 0; 
+      right: 0; 
+      top: -30%; 
+      height: 30%; 
+      pointer-events: none;
+      background: linear-gradient(180deg, transparent, rgba(56,217,255,.12), transparent); 
+      animation: scan-beam 5s linear infinite; 
+    }
+
+    .scan__obj { 
+      margin: 0; 
+      padding: 10px 14px; 
+      font-size: 13px; 
+      line-height: 1.5; 
+      color: var(--dim);
+      border-top: 1px solid rgba(56,217,255,.25); 
+      border-left: 4px solid var(--amber); 
+      background: rgba(255,176,46,.05); 
+    }
+    .scan__obj b { font: 700 12px var(--head); letter-spacing: .14em; color: var(--amber); text-shadow: var(--glow-a); }
+
+    /* ======================================================================
+       6. BOTTOM UI COMPONENTS (Incidents, Advice, Navigation Tabs)
+       ====================================================================== */
+    
+    /* Hazard Incident Block */
+    .incident { 
+      --c: var(--amber); 
+      display: grid; 
+      gap: 8px; 
+      padding: 12px 16px; 
+      border: 1px solid var(--c); 
+      border-left-width: 4px; 
+      background: color-mix(in srgb, var(--c) 9%, transparent); 
+    }
+    .incident[data-sev="moderate"] { --c: var(--green); } 
+    .incident[data-sev="critical"] { --c: var(--red); }
+    .incident__top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .incident__top .label { color: var(--c); }
+    
+    .badge { 
+      padding: 2px 10px; 
+      font: 700 12px/1.5 var(--head); 
+      letter-spacing: .14em; 
+      color: var(--c); 
+      border: 1px solid var(--c); 
+      box-shadow: 0 0 10px color-mix(in srgb, var(--c) 45%, transparent); 
+    }
+    .incident[data-sev="critical"] .badge { animation: blink .9s infinite; }
+    
+    .incident h3 { margin: 0; font: 700 14px/1.5 var(--head); letter-spacing: .05em; color: #fff; }
+    .incident p { margin: 0; color: var(--text); }
+    .incident.is-scanning h3, .incident.is-scanning p { opacity: .55; }
+    .incident.is-scanning h3::after { content: " █"; animation: blink .5s steps(1) infinite; }
+    .incident.is-hit { animation: hit .6s ease-out; }
+
+    /* Advice & Tactical Sequences */
+    .advice { display: grid; gap: 10px; padding: 12px 16px; background: rgba(56,217,255,.06); border-left: 4px solid var(--blue); }
+    .advice > p { margin: 0; }
+    .advice > p b { color: var(--blue); letter-spacing: .08em; }
+    
+    .seq { counter-reset: s; list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+    .seq li { 
+      counter-increment: s; 
+      display: grid; 
+      grid-template-columns: 28px minmax(0, 1fr); 
+      gap: 10px; 
+      align-items: start; 
+      padding: 8px 12px 8px 8px; 
+      background: rgba(255,255,255,.03); 
+      border: 1px solid var(--line); 
+    }
+    .seq li::before { 
+      content: counter(s); 
+      display: grid; 
+      place-items: center; 
+      height: 24px; 
+      font: 700 12px var(--head); 
+      color: var(--green); 
+      border: 1px solid var(--green); 
+    }
+    
+    .module { 
+      justify-self: start; 
+      padding: 2px 10px; 
+      font-size: 12px; 
+      letter-spacing: .1em; 
+      color: var(--green); 
+      border: 1px solid var(--green); 
+      background: rgba(57,255,136,.08); 
+    }
+
+    /* Buttons & Actions Area */
+    .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: auto; padding-top: 4px; }
+    
+    .btn { 
+      padding: 10px 16px; 
+      font: 700 12px var(--head); 
+      letter-spacing: .14em; 
+      color: var(--blue); 
+      background: transparent; 
+      border: 1px solid var(--blue); 
+      cursor: pointer; 
+      text-decoration: none; 
+      transition: .15s; 
+    }
+    .btn:hover { background: rgba(56,217,255,.18); color: #fff; box-shadow: var(--glow-b); }
+    
+    .launch { 
+      flex: 1 1 260px; 
+      text-align: center; 
+      padding: 14px 20px; 
+      font: 700 14px var(--head); 
+      letter-spacing: .2em; 
+      color: var(--bg-0); 
+      background: var(--amber); 
+      border: 1px solid var(--amber); 
+      text-decoration: none;
+      box-shadow: var(--glow-a); 
+      animation: glow 2s ease-in-out infinite; 
+      transition: .15s; 
+    }
+    .launch:hover { background: #ffc766; transform: translateY(-1px); }
+
+    /* Simplified Vitals UI */
+    .vit { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); }
+    .vt { 
+      --c: var(--green); 
+      padding: 8px 12px; 
+      border: 1px solid var(--line); 
+      border-left: 3px solid var(--c); 
+      background: rgba(255,255,255,.03); 
+    }
+    .vt[data-s="warn"] { --c: var(--amber); } 
+    .vt[data-s="crit"] { --c: var(--red); }
+    .vt .i { font-size: 20px; } 
+    .vt b { display: block; font: 700 22px/1.2 var(--head); color: #fff; text-shadow: 0 0 8px var(--c); } 
+    .vt small { color: var(--dim); }
+    .vt.st b { color: var(--c); font-size: 14px; }
+    
+    .incident h3 { font-size: 18px; }
+    .more { font-size: 13px; color: var(--dim); } 
+    .more summary { cursor: pointer; color: var(--blue); }
+    .more p { margin: 6px 0; } 
+    .more ol { margin: 6px 0; padding-left: 20px; }
+    
+    .hud { 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      gap: 12px; 
+      flex-wrap: wrap; 
+      padding: 10px 16px; 
+      border-left: 4px solid var(--blue); 
+      background: rgba(56,217,255,.06); 
+      text-decoration: none; 
+      color: var(--text); 
+    }
+    .hud:hover { background: rgba(56,217,255,.16); }
+    
+    body.game #btn-next { color: var(--bg-0); background: var(--amber); border-color: var(--amber); box-shadow: var(--glow-a); }
+    
+    /* Scene Navigation (Rail/Tabs) */
+    .gtabs { display: none; } 
+    body.game .gtabs { display: flex; gap: 6px; }
+    
+    .gtabs button { 
+      flex: 1; 
+      padding: 8px 10px; 
+      font: 700 12px var(--head); 
+      letter-spacing: .08em; 
+      color: var(--dim); 
+      background: transparent; 
+      border: 1px solid var(--line); 
+      cursor: pointer; 
+    }
+    .gtabs button.on { color: var(--bg-0); background: var(--blue); border-color: var(--blue); box-shadow: var(--glow-b); }
+    .gtabs button.alert:not(.on) { color: var(--red); border-color: var(--red); animation: blink .9s infinite; }
+    
+    .guide { display: grid; gap: 14px; align-content: start; min-width: 0; }
+    body.game .guide { padding: 12px; border: 1px solid rgba(56,217,255,.4); background: rgba(56,217,255,.04); }
+    .gp { display: grid; gap: 12px; align-content: start; min-width: 0; } 
+    body.game .gp { display: none; } 
+    body.game .gp.on { display: grid; }
+    
+    .brief { display: grid; gap: 8px; } 
+    .brief > div { 
+      display: grid; 
+      grid-template-columns: 28px minmax(0, 1fr); 
+      gap: 10px; 
+      padding: 8px 12px; 
+      background: rgba(255,255,255,.03); 
+      border-left: 3px solid var(--amber); 
+    }
+    .brief .i { font-size: 20px; } 
+    .brief small { display: block; font: 700 12px var(--head); letter-spacing: .12em; color: var(--amber); } 
+    .brief p { margin: 2px 0 0; }
+    
+    .bubble { 
+      display: grid; 
+      grid-template-columns: 44px minmax(0, 1fr); 
+      gap: 12px; 
+      align-items: start; 
+      padding: 12px 14px; 
+      background: rgba(56,217,255,.07); 
+      border: 1px solid var(--blue); 
+      border-radius: 2px 14px 14px 14px; 
+    }
+    .bubble .av { 
+      display: grid; 
+      place-items: center; 
+      width: 44px; 
+      height: 44px; 
+      font-size: 24px; 
+      border: 2px solid var(--blue); 
+      border-radius: 50%; 
+      box-shadow: var(--glow-b); 
+      background: var(--bg-0); 
+    }
+    .bubble b { display: block; font: 700 12px var(--head); letter-spacing: .14em; color: var(--blue); } 
+    .bubble p { margin: 4px 0 0; }
+    
+    .seq li { cursor: pointer; } 
+    .seq li.done { opacity: .65; border-color: var(--green); } 
+    .seq li.done::before { content: "✓"; color: var(--bg-0); background: var(--green); }
+    
+    .module { text-decoration: none; } 
+    .module:hover { background: rgba(57,255,136,.2); }
+    .hint { margin: 0; font-size: 12px; color: var(--dim); }
+    
+    /* Scene flow (Chapter structure) */
+    .rail { list-style: none; display: flex; gap: 6px; margin: 0; padding: 0; flex: none; }
+    .rail button { 
+      flex: 1; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      gap: 6px; 
+      min-height: 40px; 
+      padding: 6px; 
+      font: 700 12px var(--head); 
+      letter-spacing: .06em; 
+      color: var(--dim); 
+      background: transparent; 
+      border: 1px solid var(--line); 
+      cursor: pointer; 
+    }
+    .rail button.on { color: var(--bg-0); background: var(--blue); border-color: var(--blue); box-shadow: var(--glow-b); }
+    .rail button.done { color: var(--green); border-color: rgba(57,255,136,.5); }
+    .rail button.alert:not(.on) { color: var(--red); border-color: var(--red); animation: blink .9s infinite; }
+    
+    .scenes { display: grid; align-content: start; min-width: 0; }
+    .scene { display: none; gap: 16px; align-content: start; animation: dossier-in .35s ease-out; } 
+    .scene.on { display: grid; }
+    .scene .pov, .scene .tmap { min-height: 300px; }
+    .scene .brief { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+    .scene .brief > div { padding: 14px 16px; }
+    .scene .incident h3 { font-size: 22px; } 
+    .scene .incident p { font-size: 15px; }
+    
+    .actions #btn-next { flex: 1 1 200px; } 
+    .actions .launch { flex: 2 1 260px; }
+    #btn-next.ready { color: var(--bg-0); background: var(--amber); border-color: var(--amber); box-shadow: var(--glow-a); }
+
+    /* ======================================================================
+       7. NASA/USGS ORBITAL MAP & REAL PHOTOS
+       ====================================================================== */
+    .pov__img { 
+      position: absolute; 
+      inset: 0; 
+      z-index: 1; 
+      width: 100%; 
+      height: 100%; 
+      object-fit: cover; 
+      display: none; 
+      animation: pan 60s ease-in-out infinite alternate; 
+    }
+    .pov.has-img .pov__img { display: block; } 
+    .pov.has-img .pov__scene, .pov.has-img .pov__noise, .pov.has-img .pov__bar, .pov.has-img .pov__ph { display: none; }
+    .pov.has-img .pov__fx { background: radial-gradient(ellipse at center, transparent 68%, rgba(0,0,0,.55)); }
+    
+    .pov.wide { background: var(--img) center / cover; } 
+    .pov.wide::before { content: ""; position: absolute; inset: 0; backdrop-filter: blur(20px); background: rgba(0,0,0,.5); }
+    .pov.wide .pov__img { object-fit: contain; animation: none; }
+    
+    .pov__cr { 
+      position: absolute; 
+      z-index: 3; 
+      left: 50%; 
+      top: 8px; 
+      transform: translateX(-50%); 
+      font-size: 11px; 
+      letter-spacing: .08em; 
+      color: rgba(255,255,255,.7); 
+      white-space: nowrap; 
+    }
+    
+    @keyframes pan { 
+      from { object-position: 0% 50%; } 
+      to { object-position: 100% 50%; } 
+    }
+    
+    .tmap { box-sizing: border-box; padding-top: 30px; }
+    .mtabs { position: absolute; z-index: 3; top: 0; left: 0; right: 0; display: flex; }
+    .mtabs button { 
+      flex: 1; 
+      padding: 6px; 
+      font: 700 11px var(--head); 
+      letter-spacing: .06em; 
+      color: var(--dim); 
+      background: rgba(7,12,22,.92); 
+      border: 0; 
+      border-bottom: 1px solid var(--line); 
+      cursor: pointer; 
+    }
+    .mtabs button.on { color: var(--bg-0); background: var(--blue); }
+    
+    .tmap iframe { 
+      position: absolute; 
+      left: 0; 
+      right: 0; 
+      top: 30px; 
+      width: 100%; 
+      height: calc(100% - 60px); 
+      border: 0; 
+      background: #fff; 
+    }
+    
+    .usgs-open { 
+      position: absolute; 
+      z-index: 3; 
+      left: 0; 
+      right: 0; 
+      bottom: 0; 
+      padding: 6px; 
+      text-align: center; 
+      font-size: 12px; 
+      color: var(--blue); 
+      text-decoration: none; 
+      background: rgba(7,12,22,.94); 
+    }
+    
+    .tmap[data-m="route"] .mv, .tmap[data-m="route"] .usgs-open { display: none; }
+    .tmap[data-m="map"] > svg, .tmap[data-m="map"] .tmap__cap { display: none; }
+    
+    /* Wide Panoramas */
+    .pov.wide::before { display: none; }
+    .pov.wide .pov__img { object-fit: cover; animation: pan 40s ease-in-out infinite alternate; }
+    
+    /* Orbital Map Details (NASA Trek CTX Tiles) */
+    .mv { position: absolute; left: 0; right: 0; top: 30px; bottom: 30px; overflow: hidden; background: #1a0f0a; }
+    .mv__t { position: absolute; width: 256px; height: 256px; max-width: none; z-index: 0; user-select: none; -webkit-user-drag: none; }
+    .mv > svg { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+    
+    .mv .rl { fill: none; stroke: #000; stroke-opacity: .7; stroke-width: 7; stroke-linejoin: round; stroke-linecap: round; }
+    .mv .rp { fill: none; stroke: #fff; stroke-width: 3; stroke-dasharray: 7 6; stroke-linecap: round; }
+    .mv .rd { fill: none; stroke: var(--blue); stroke-width: 3.5; stroke-linejoin: round; filter: drop-shadow(0 0 4px var(--blue)); }
+    .mv .mk { fill: var(--bg-0); stroke: var(--blue); stroke-width: 2.5; pointer-events: auto; cursor: pointer; } 
+    .mv .mk.v { fill: var(--blue); }
+    .mv .ms { fill: var(--amber); stroke: #fff; stroke-width: 2.5; filter: drop-shadow(0 0 5px var(--amber)); }
+    .mv text { font: 700 13px var(--mono); fill: #fff; paint-order: stroke; stroke: #000; stroke-width: 3px; stroke-linejoin: round; }
+    
+    .mv__ctl { position: absolute; z-index: 4; right: 6px; top: 6px; display: flex; gap: 4px; }
+    .mv__ctl button { 
+      min-width: 30px; 
+      height: 28px; 
+      padding: 0 8px; 
+      font: 700 12px var(--head); 
+      color: var(--blue); 
+      background: rgba(7,12,22,.88); 
+      border: 1px solid var(--blue); 
+      cursor: pointer; 
+    }
+    .mv__st { 
+      position: absolute; 
+      z-index: 4; 
+      left: 6px; 
+      bottom: 4px; 
+      padding: 2px 6px; 
+      font-size: 11px; 
+      letter-spacing: .06em; 
+      color: #fff; 
+      background: rgba(7,12,22,.78); 
+    }
+
+    /* ======================================================================
+       8. ANIMATIONS & REDUCED MOTION PREFERENCES
+       ====================================================================== */
+    @keyframes blink { 50% { opacity: .3; } }
+    @keyframes scan-beam { to { top: 110%; } }
+    @keyframes sweep { from { top: -15%; } to { top: 105%; } }
+    @keyframes noise { 
+      0% { transform: translate(0,0); } 
+      25% { transform: translate(-3%,2%); } 
+      50% { transform: translate(2%,-3%); } 
+      75% { transform: translate(-2%,-1%); } 
+      100% { transform: translate(0,0); } 
+    }
+    @keyframes tear { 
+      0%, 91%, 100% { transform: none; filter: none; } 
+      92% { transform: translateX(-6px); filter: hue-rotate(40deg) saturate(1.6); } 
+      94% { transform: translateX(5px) skewX(3deg); } 
+      96% { transform: translateX(-2px); filter: none; } 
+    }
+    @keyframes ping { 
+      from { transform: scale(.6); opacity: .9; } 
+      to { transform: scale(2.6); opacity: 0; } 
+    }
+    @keyframes hit { 
+      0% { box-shadow: 0 0 0 0 var(--c); background: color-mix(in srgb, var(--c) 35%, transparent); } 
+      100% { box-shadow: 0 0 0 14px transparent; } 
+    }
+    @keyframes glow { 
+      50% { box-shadow: 0 0 10px rgba(255,176,46,.9), 0 0 32px rgba(255,176,46,.5); } 
+    }
+    
+    @media (prefers-reduced-motion: reduce) { 
+      * { animation: none !important; transition: none !important; } 
+    }
+  </style>
+</head>
+<body class="game">
+
+  <!-- TOP HEADER -->
+  <header class="top">
+    <div>
+      <h1>ARES-1 // Campaign</h1>
+      <div class="top__sub">MISSION 01 · MOUNT SHARP ASCENT · TUTORIAL ROUTE</div>
+    </div>
+    <div class="top__right">
+      <div class="stat" id="stat">CHECKPOINTS <b id="prog-text">0 / 6</b></div>
+      <a class="back" href="index.html">← START MENU</a>
+    </div>
+  </header>
+
+  <main class="stage">
+    
+    <!-- LEFT PANEL: Route Checklist -->
+    <section class="panel" aria-labelledby="route-h">
+      <h2 id="route-h">
+        <span class="h2__t"><i class="q">01</i>Route Checkpoints</span>
+        <em>TUTORIAL PATH</em>
+      </h2>
+      <div class="progress" aria-hidden="true"><i id="prog-bar"></i></div>
+      <ol class="route" id="route" aria-label="Route checkpoints"></ol>
+    </section>
+
+    <!-- RIGHT PANEL: Briefing & Dynamic Scenes -->
+    <section class="panel main-p" aria-labelledby="brief-h">
+      <h2 id="brief-h">
+        <span class="h2__t"><i class="q" id="b-num">--</i><span id="b-title">Select a checkpoint</span></span>
+        <em id="b-coords">--</em>
+      </h2>
+
+      <!-- Chapter Tabs -->
+      <ol class="rail" id="rail" aria-label="Chapter steps">
+        <li style="display:contents"><button type="button" data-s="0">📍 ARRIVE</button></li>
+        <li style="display:contents"><button type="button" data-s="1">🎯 BRIEF</button></li>
+        <li style="display:contents"><button type="button" data-s="2">📊 SCAN</button></li>
+        <li style="display:contents"><button type="button" data-s="3" id="tab-haz">⚠ INCIDENT</button></li>
+        <li style="display:contents"><button type="button" data-s="4">🤖 GUIDE <span id="tab-n"></span></button></li>
+      </ol>
+      
+      <!-- Narrator Bubble -->
+      <div class="bubble">
+        <span class="av">🛰</span>
+        <div><b id="narr-t">CHAPTER</b><p id="narr">--</p></div>
+      </div>
+
+      <div class="scenes">
+        
+        <!-- SCENE 0: Location (POV & Map) -->
+        <div class="scene" data-s="0">
+          <div class="row2">
+            <div class="pov" id="pov" role="img" aria-label="Real Mars photo from NASA">
+              <img class="pov__img" id="pov-img" alt="" referrerpolicy="no-referrer">
+              <div class="pov__cr">📷 NASA/JPL-Caltech</div>
+              <div class="pov__scene"></div>
+              <div class="pov__noise"></div>
+              <div class="pov__bar"></div>
+              <div class="pov__fx"></div>
+              <div class="pov__cross"></div>
+              <div class="pov__ph">PLACEHOLDER FEED</div>
+              <div class="pov__ui">
+                <span class="pov__rec">ROVER POV // MASTCAM-SIM</span>
+                <span id="pov-cp">CP-01</span>
+                <span id="pov-pos">--</span>
+                <span id="pov-leg">--</span>
+              </div>
+            </div>
+            
+            <div class="tmap" id="tmap" data-m="map">
+              <div class="mtabs">
+                <button type="button" data-m="route">🗺 ROUTE</button>
+                <button type="button" class="on" data-m="map">🛰 ORBITAL MAP</button>
+              </div>
+              <div class="mv" id="mv">
+                <div class="mv__ctl">
+                  <button type="button" data-z="-1" aria-label="Zoom out">−</button>
+                  <button type="button" data-z="1" aria-label="Zoom in">+</button>
+                  <button type="button" data-z="fit">FIT</button>
+                </div>
+                <div class="mv__st" id="mv-st">LOADING ORBITAL IMAGERY…</div>
+              </div>
+              <a class="usgs-open" href="https://astrogeology-usgs.hub.arcgis.com/pages/interactive-maps-mars" target="_blank" rel="noopener">↗ Open USGS Mars interactive maps</a>
+              <span class="tmap__cap">SCHEMATIC · NOT TO SCALE</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- SCENE 1: Mission Briefing -->
+        <div class="scene" data-s="1">
+          <p class="mission">
+            <b>Operation: Mount Sharp Ascent</b>
+            Follow the real Curiosity rover route through Gale Crater. Each waypoint triggers a random incident and teaches one part of the Live HUD.
+          </p>
+          <div class="brief">
+            <div><span class="i">🎯</span><span><small>OBJECTIVE</small><p id="g-obj">--</p></span></div>
+            <div><span class="i">🪨</span><span><small>TERRAIN</small><p id="g-ter">--</p></span></div>
+            <div><span class="i">👁</span><span><small>SIGHTS</small><p id="g-sig">--</p></span></div>
+          </div>
+        </div>
+
+        <!-- SCENE 2: Tactical Scan & Charts -->
+        <div class="scene" data-s="2">
+          <div class="vit" id="vit" aria-label="Crew vitals"></div>
+          <section class="scan" aria-labelledby="sc-h">
+            <div class="scan__bar">
+              <span id="sc-h">◈ Tactical Route &amp; Threat Scanner</span>
+              <span class="scan__tag" id="mm-tag">CP-01</span>
+            </div>
+            <div class="scan__grid">
+              <figure class="scan__cell">
+                <figcaption class="scan__cap"><span>⛰ Elevation</span><em>m</em></figcaption>
+                <div class="scan__box"><canvas id="chart-route" role="img" aria-label="Elevation along the route"></canvas></div>
+              </figure>
+              <figure class="scan__cell">
+                <figcaption class="scan__cap"><span>⚠ Threat level</span><em>0–100</em></figcaption>
+                <div class="scan__box"><canvas id="chart-threat" role="img" aria-label="Threat radar"></canvas></div>
+              </figure>
+            </div>
+            <p class="scan__obj"><b>🎯</b> <span id="mm-obj">--</span></p>
+          </section>
+        </div>
+
+        <!-- SCENE 3: Hazard Incident -->
+        <div class="scene" data-s="3">
+          <div class="incident" id="incident" data-sev="warning" aria-live="assertive">
+            <div class="incident__top">
+              <span class="label">Random Incident Trigger</span>
+              <span class="badge" id="inc-badge">--</span>
+            </div>
+            <h3 id="inc-title">--</h3>
+            <p id="inc-text"></p>
+            <p id="inc-sub"></p>
+          </div>
+          <div><button class="btn" type="button" id="btn-replay">↻ REPLAY INCIDENT</button></div>
+        </div>
+
+        <!-- SCENE 4: Tactical Guide -->
+        <div class="scene" data-s="4">
+          <div class="bubble">
+            <span class="av">🤖</span>
+            <div><b>SYSTEM ADVICE</b><p id="adv-text">--</p></div>
+          </div>
+          <ol class="seq" id="adv-steps"></ol>
+          <p class="hint">Tap each step to tick it off ✓</p>
+          <a class="module" id="adv-module" href="weather.html">--</a>
+        </div>
+
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="actions">
+        <button class="btn" type="button" id="btn-back">◂ BACK</button>
+        <a class="launch" id="launch" href="weather.html" hidden>[ LAUNCH MISSION HUD ]</a>
+        <button class="btn" type="button" id="btn-next">CONTINUE ▸</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+  (function () {
+    /* ======================================================================
+       1. ROUTE DATA CONFIGURATION
+       ====================================================================== */
+    const ROUTE = [
+      { name: "Landing Zone", lat: -4.5895, lon: 137.4417, sev: "moderate", elev: -4500, o2: 99, hr: 76, bp: "118/76", temp: 36.8, status: "OPTIMAL",
+        intel: "Objective: Establish base camp, deploy primary surface comms relay, and calibrate atmospheric sensors on flat basaltic plains. Terrain: Smooth alluvial gravels mixed with windblown drift sand and minor basalt pebbles. Sights: Expansive flat horizon inside Gale Crater with the towering wall of Mount Sharp visible to the south.",
+        inc: { badge: "NOTICE", title: "Abrasive perchlorate dust infiltration in suit seals; potential boot sinkage in soft sand drifts.", text: "Low morning wind shear; afternoon thermal convection gusts up to 45 km/h." },
+        advice: "New to Mars jargon? Launch the Live HUD and use the Codex (top-right quadrant). Search “Regolith” — that loose dust is what is hazing your visor.",
+        steps: [
+          "Press [ LAUNCH MISSION HUD ].", 
+          "Find “In-Game Intel & Codex” in the top-right quadrant.", 
+          "Type a term in the Query box — non-matching entries hide instantly. Click an entry to expand it."
+        ],
+        module: "HUD MODULE · Q2 IN-GAME INTEL & CODEX",
+        sky: ["#2b1d1a", "#c9824f"], far: "#5a3322", near: "#3a2016", 
+        ridge: "polygon(0 64%, 20% 56%, 40% 62%, 62% 50%, 82% 58%, 100% 52%, 100% 100%, 0 100%)" 
+      },
+      { name: "Clay-Bearing Unit", lat: -4.795, lon: 137.382, sev: "warning", elev: -4390, o2: 93, hr: 92, bp: "126/84", temp: 37.1, status: "EXERTION",
+        intel: "Objective: Drill and extract subsurface clay-rich core samples to analyze ancient aqueous habitability and organic preservation. Terrain: Smooth, fractured mudstone pavement rich in hydrated phyllosilicates (clay minerals). Sights: Broad, flat-lying sedimentary clay pans showing polygonal shrinkage cracks.",
+        inc: { badge: "WARNING", title: "Clay surface becomes extremely slick if micro-frost sublimates; slip/fall hazard for EVA astronauts.", text: "High humidity pockets near the ground during pre-dawn hours." },
+        advice: "Terrain trouble? Open the Mission Briefing quadrant, pick a category, then a situation, and follow the Tactical Action Sequence from step 01 down.",
+        steps: [
+          "In “Mission Briefing & Hazards”, choose Step 1 · “Surface Navigation & Regions”.", 
+          "Pick a situation in Step 2 and read the colour-coded status in Step 3.", 
+          "Read Observed Symptoms, then follow the numbered Tactical Action Sequence."
+        ],
+        module: "HUD MODULE · Q3 MISSION BRIEFING & HAZARDS",
+        sky: ["#241a20", "#b8734f"], far: "#6a3d28", near: "#43261a", 
+        ridge: "polygon(0 58%, 15% 50%, 33% 57%, 50% 46%, 68% 56%, 86% 48%, 100% 54%, 100% 100%, 0 100%)" 
+      },
+      { name: "Greenheugh Pediment", lat: -4.812, lon: 137.375, sev: "warning", elev: -4210, o2: 85, hr: 118, bp: "140/90", temp: 37.5, status: "CAUTION",
+        intel: "Objective: Explore the erosion-resistant caprock unconformity; study climate transition markers from wet to arid Mars. Terrain: Hard, cemented sandstone caprock plateau littered with resistant nodular iron-oxide concretions. Sights: Breathtaking panoramic view looking back across Gale Crater floor and landing site.",
+        inc: { badge: "WARNING", title: "Steep precipice edge with sheer drop-offs; mandatory tether protocols required for EVA crew.", text: "Exposed high-altitude summit winds exceeding 65 km/h; lower atmospheric pressure." },
+        advice: "To survive this incident, launch the Live HUD, select “Extreme Weather Solutions” in the Mission Briefing, and watch your Crew Biometrics — heart rate and Stress Index will climb as the storm hits.",
+        steps: [
+          "In Mission Briefing, choose Step 1 · “Extreme Weather Solutions”.", 
+          "Read the Dossier’s Tactical Action Sequence before the storm arrives.", 
+          "Watch “Crew Health & Biometrics HUD” for heart-rate and stress spikes."
+        ],
+        module: "HUD MODULES · Q3 MISSION BRIEFING + Q4 BIOMETRICS",
+        sky: ["#2e1c14", "#d28a4a"], far: "#7a4a2c", near: "#4a2a18", 
+        ridge: "polygon(0 54%, 25% 50%, 55% 47%, 80% 45%, 100% 44%, 100% 100%, 0 100%)" 
+      },
+      { name: "Gediz Vallis Ridge", lat: -4.835, lon: 137.368, sev: "critical", elev: -3980, o2: 78, hr: 108, bp: "135/86", temp: 36.9, status: "EXERTION",
+        intel: "Objective: Investigate mysterious debris-flow ridge deposits containing exotic rock types from unvisited upper mountain zones. Terrain: Chaotic boulder train and boulder-armored ridge crest standing above the valley floor. Sights: Detailed cross-section of ancient catastrophic debris torrents and mudslides.",
+        inc: { badge: "CRITICAL", title: "Unstable stacked boulder piles that can shift under human weight.", text: "Moderate winds with occasional blowing dust streaks." },
+        advice: "Re-plan before you move. The Navigation & Pathfinding globe draws your EVA route as a red dashed line, so you can compare a new target against the hazard.",
+        steps: [
+          "Open “Navigation & Pathfinding” in the top-left quadrant.", 
+          "Set the Start Point Source, then pick a different target landmark.", 
+          "Check the red dashed EVA route on the globe — the globe rotates to your start point."
+        ],
+        module: "HUD MODULE · Q1 NAVIGATION & PATHFINDING",
+        sky: ["#1f1618", "#a85f45"], far: "#4e2c20", near: "#2e1a12", 
+        ridge: "polygon(0 70%, 10% 40%, 22% 66%, 34% 36%, 48% 62%, 60% 42%, 76% 64%, 90% 46%, 100% 60%, 100% 100%, 0 100%)" 
+      },
+      { name: "Gediz Vallis Channel", lat: -4.85, lon: 137.36, sev: "warning", elev: -4060, o2: 70, hr: 100, bp: "130/84", temp: 36.4, status: "COLD ZONE",
+        intel: "Objective: Analyze the last liquid-water carved channel on Mount Sharp; search for biosignature-preserving mineral precipitates. Terrain: Deeply incised bedrock channel floor with polished stone and fine silt pockets. Sights: The unmistakable signature of an ancient riverbed winding down the mountain.",
+        inc: { badge: "WARNING", title: "Flash-freeze hazard if suit liquid cooling loops malfunction in deep shade.", text: "Still air with high relative humidity during diurnal cycles." },
+        advice: "Lost the beacon? Switch the route planner to Dead Reckoning and plot your next hop by heading and distance instead of a landmark.",
+        steps: [
+          "In “Navigation & Pathfinding”, set Destination Mode to Dead Reckoning.", 
+          "Drag the Heading slider (0° is north, 90° is east) and the Travel Distance slider.", 
+          "Read the computed target and follow the red dashed route on the globe."
+        ],
+        module: "HUD MODULE · Q1 NAVIGATION & PATHFINDING",
+        sky: ["#1b1418", "#9a5a44"], far: "#432618", near: "#26150e", 
+        ridge: "polygon(0 36%, 14% 44%, 26% 30%, 40% 100%, 60% 100%, 74% 30%, 86% 44%, 100% 36%, 100% 100%, 0 100%)" 
+      },
+      { name: "Sulfate-Bearing Unit", lat: -4.865, lon: 137.352, sev: "warning", elev: -3720, o2: 62, hr: 122, bp: "142/92", temp: 37.3, status: "PEAK ALERT",
+        intel: "Objective: Final mission waypoint: Analyze massive sulfate salt deposits formed during Mars' major drying period; drill deep core samples for astrobiological analysis. Terrain: Massive, light-toned sulfate bedrock slabs interspersed with wind-eroded yardangs. Sights: Vast, bright mineral terraces stretching upward into the upper reaches of Mount Sharp.",
+        inc: { badge: "WARNING", title: "High cosmic radiation exposure due to elevated terrain; strict dosimeter monitoring required.", text: "Severe sub-zero baseline (-85°C) with high winds and frequent dust devil activity." },
+        advice: "Tired crews make mistakes. Use the Psychological & Stress Evaluator to see how your days on Mars and your sleep change the Stress Index, then follow its recovery steps.",
+        steps: [
+          "Scroll to “Crew Psychological & Stress Evaluator” in the bottom-right quadrant.", 
+          "Adjust the sliders and selectors and watch the Stress Index and ECG react.", 
+          "Follow the recovery protocol listed under the Mental Health Index."
+        ],
+        module: "HUD MODULE · Q4 CREW HEALTH & BIOMETRICS",
+        sky: ["#241a1c", "#c07a4a"], far: "#6e4228", near: "#44261a", 
+        ridge: "polygon(0 60%, 18% 54%, 38% 59%, 58% 52%, 78% 57%, 100% 50%, 100% 100%, 0 100%)" 
+      }
+    ];
+    
+    // Assign incremental ID to route stops
+    ROUTE.forEach((p, i) => (p.id = i));
+    
+    // Shortened objective and hazard text for charts/maps
+    const SHORT = [
+      { h: "🌫️ Dust in suit seals", o: "Set up base camp", hud: "📖 Survival Words" },
+      { h: "🧊 Slippery clay", o: "Drill clay samples", hud: "🛟 Emergency Guide" },
+      { h: "🧗 Cliff edge · 💨 Strong wind", o: "Study the caprock", hud: "🛟 Guide · ❤️ Crew Health" },
+      { h: "🪨 Shifting boulders", o: "Inspect the debris ridge", hud: "🧭 Navigation" },
+      { h: "🥶 Flash-freeze risk", o: "Analyze the dry riverbed", hud: "🧭 Navigation" },
+      { h: "☢️ High radiation", o: "Sample the sulfate rock", hud: "🧠 Stress Check" }
+    ];
+
+    /* ======================================================================
+       2. HELPER FUNCTIONS & MATH
+       ====================================================================== */
+    const $ = (id) => document.getElementById(id);
+    
+    const el = (tag, cls, txt) => { 
+      const e = document.createElement(tag); 
+      if (cls) e.className = cls; 
+      if (txt != null) e.textContent = txt; 
+      return e; 
+    };
+    
+    const NS = "http://www.w3.org/2000/svg";
+    const svg = (tag, attrs, txt) => { 
+      const e = document.createElementNS(NS, tag); 
+      for (const k in attrs) e.setAttribute(k, attrs[k]); 
+      if (txt != null) e.textContent = txt; 
+      return e; 
+    };
+    
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    
+    // Coordinate Formatters
+    const fmtLat = (v) => Math.abs(v).toFixed(4) + "°" + (v >= 0 ? "N" : "S");
+    const fmtLon = (v) => Math.abs(v).toFixed(4) + "°" + (v >= 0 ? "E" : "W");
+    const fmtLL = (p) => fmtLat(p.lat) + " " + fmtLon(p.lon);
+    
+    // Haversine formula for calculating distance between points
+    const kmBetween = (a, b) => {
+      const r = Math.PI / 180;
+      const dp = (b.lat - a.lat) * r;
+      const dl = (b.lon - a.lon) * r;
+      const h = Math.sin(dp / 2) ** 2 + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(dl / 2) ** 2;
+      return 2 * 3389.5 * Math.asin(Math.sqrt(h)); // Mars radius
+    };
+    
+    // Calculate leg distances
+    ROUTE.forEach((p, i) => { 
+      p.leg = i ? kmBetween(ROUTE[i - 1], p) : 0; 
+      p.total = i ? ROUTE[i - 1].total + p.leg : 0; 
+    });
+
+    /* ======================================================================
+       3. STATE MANAGEMENT & STORAGE
+       ====================================================================== */
+    let cur = 0, visited = new Set(), token = 0;
+    
+    try { 
+      visited = new Set(JSON.parse(sessionStorage.getItem("ares1.visited") || "[]")); 
+    } catch (e) {}
+    
+    const saveVitals = (p) => { 
+      try { 
+        ["hr", "bp", "temp", "o2", "status"].forEach((k) => localStorage.setItem("ares1." + k, p[k])); 
+      } catch (e) {} 
+    };
+    
+    const save = () => { 
+      try { 
+        sessionStorage.setItem("ares1.visited", JSON.stringify([...visited])); 
+      } catch (e) {} 
+    };
+
+    /* ======================================================================
+       4. UI INITIALIZATION: Left Navigation List
+       ====================================================================== */
+    const list = $("route");
+    ROUTE.forEach((p) => {
+      const li = el("li");
+      const b = el("button", "cp"); 
+      b.type = "button"; 
+      b.dataset.sev = p.sev;
+      
+      const t = el("span", "cp__t"); 
+      t.append(el("b", null, p.name), el("small", null, ({ moderate: "🟢", warning: "🟡", critical: "🔴" })[p.sev] + " " + fmtLL(p)));
+      
+      b.append(
+        el("span", "cp__n", String(p.id + 1).padStart(2, "0")), 
+        t, 
+        el("span", "cp__leg", p.id ? "+" + p.leg.toFixed(1) + " km" : "START")
+      );
+      
+      b.addEventListener("click", () => select(p.id));
+      li.appendChild(b); 
+      list.appendChild(li);
+    });
+    
+    // Keyboard navigation for route list
+    list.addEventListener("keydown", (e) => {
+      if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+      e.preventDefault();
+      const n = Math.max(0, Math.min(ROUTE.length - 1, cur + (e.key === "ArrowDown" ? 1 : -1)));
+      select(n); 
+      list.querySelectorAll(".cp")[n].focus();
+    });
+
+    /* ======================================================================
+       5. MAP RENDERER (Schematic Local Map)
+       ====================================================================== */
+    function drawMap() {
+      const box = $("tmap");
+      const W = 300, H = 220, pad = 34;
+      
+      const lats = ROUTE.map((p) => p.lat), lons = ROUTE.map((p) => p.lon);
+      const minLa = Math.min(...lats), maxLa = Math.max(...lats);
+      const minLo = Math.min(...lons), maxLo = Math.max(...lons);
+      
+      // Scaling functions
+      const X = (lo) => pad + ((lo - minLo) / (maxLo - minLo || 1)) * (W - 2 * pad);
+      const Y = (la) => pad + ((maxLa - la) / (maxLa - minLa || 1)) * (H - 2 * pad);
+      
+      const s = svg("svg", { viewBox: `0 0 ${W} ${H}`, preserveAspectRatio: "xMidYMid meet", "aria-hidden": "true" });
+      
+      // Grid lines
+      for (let i = 1; i < 6; i++) { 
+        s.append(
+          svg("line", { class: "g", x1: i * W / 6, y1: 0, x2: i * W / 6, y2: H }), 
+          svg("line", { class: "g", x1: 0, y1: i * H / 6, x2: W, y2: i * H / 6 })
+        ); 
+      }
+      
+      // Radar rings
+      s.append(
+        svg("circle", { class: "ring", cx: X(ROUTE[cur].lon), cy: Y(ROUTE[cur].lat), r: 46 }), 
+        svg("circle", { class: "ring", cx: X(ROUTE[cur].lon), cy: Y(ROUTE[cur].lat), r: 90 })
+      );
+      
+      // Paths
+      const pts = ROUTE.map((p) => `${X(p.lon).toFixed(1)},${Y(p.lat).toFixed(1)}`);
+      s.append(
+        svg("polyline", { class: "path", points: pts.join(" ") }), 
+        svg("polyline", { class: "done", points: pts.slice(0, cur + 1).join(" ") })
+      );
+      
+      // Markers
+      ROUTE.forEach((p) => {
+        const x = X(p.lon), y = Y(p.lat), on = p.id === cur;
+        if (on) s.append(svg("circle", { class: "pulse", cx: x, cy: y, r: 7 }));
+        
+        const c = svg("circle", { class: on ? "sel" : "pt" + (visited.has(p.id) ? " v" : ""), cx: x, cy: y, r: on ? 7 : 5 });
+        c.addEventListener("click", () => select(p.id)); 
+        s.append(c);
+        
+        s.append(svg("text", { class: on ? "sel-l" : "", x: x + 11, y: y + 4 }, String(p.id + 1).padStart(2, "0")));
+      });
+      
+      const old = box.querySelector(":scope > svg"); 
+      old && old.remove();
+      box.prepend(s);
+    }
+
+    /* ======================================================================
+       6. INCIDENT SIMULATOR
+       ====================================================================== */
+    function playIncident(p) {
+      const my = ++token;
+      const box = $("incident");
+      
+      // Reset state
+      box.classList.remove("is-hit", "is-scanning"); 
+      $("inc-title").textContent = ""; 
+      $("inc-text").textContent = ""; 
+      $("inc-sub").textContent = ""; 
+      box.dataset.sev = "default"; 
+      $("inc-badge").textContent = "--";
+      void box.offsetWidth; // Trigger reflow
+      
+      const reveal = () => {
+        if (my !== token) return;
+        box.classList.remove("is-scanning"); 
+        box.dataset.sev = p.sev; 
+        $("inc-badge").textContent = p.inc.badge; 
+        $("inc-title").textContent = SHORT[p.id].h; 
+        $("inc-text").textContent = p.inc.title; 
+        $("inc-sub").textContent = "🌬 " + p.inc.text;
+        
+        if (sc !== 3) $("tab-haz").classList.add("alert");
+        box.classList.add("is-hit"); 
+      };
+      
+      if (reduced) return reveal();
+      
+      // Scanning animation
+      box.classList.add("is-scanning"); 
+      $("inc-title").textContent = "SCANNING SECTOR"; 
+      $("inc-text").textContent = "Analysing telemetry for hazards…";
+      setTimeout(reveal, 800);
+    }
+
+    /* ======================================================================
+       7. CHART.JS: Radar & Elevation Profiles
+       ====================================================================== */
+    const SEV_COLOR = { moderate: "#ffb02e", warning: "#ffb02e", critical: "#ff3b57" };
+    const AXES = [["☢", "Radiation"], ["🌪", "Dust"], ["⛰", "Terrain"], ["❄", "Cold"], ["🔧", "Gear"]];
+    const rgba = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
+    
+    let routeChart = null, threatChart = null;
+
+    // Generate dynamic threat stats based on incident text
+    function threatProfile(p, i) {
+      const t = (p.inc.title + " " + p.inc.text).toLowerCase();
+      const hits = (re) => (t.match(re) || []).length;
+      const base = { moderate: 24, warning: 38, critical: 52 }[p.sev] || 35;
+      const cold = (t.match(/-(\d{2,3})\s*°?\s*c/) || [])[1];
+      
+      const raw = [
+        hits(/radiation|cosmic|dosimeter|solar|uv/g) * 18,
+        hits(/dust|perchlorate|abrasive|wind|gust|storm|devil|drift|fines/g) * 11,
+        hits(/terrain|slope|boulder|sinkage|steep|uneven|slab|ridge|channel|crevasse|loose|rock|trip|slip|rubble|fracture/g) * 13,
+        hits(/cold|thermal|freez|sub-zero|frost|temperature|chill/g) * 14 + (cold ? Math.min(26, cold / 3.5) : 0),
+        hits(/equipment|seal|wheel|suit|abras|battery|drill|power|wear|jam|damage|failure|strain|joint|mechanis/g) * 12
+      ];
+      
+      return raw.map((v, k) => Math.max(8, Math.min(100, Math.round(base + Math.min(v, 48) + ((i * 7 + k * 11) % 9)))));
+    }
+
+    function buildScanner() {
+      if (!window.Chart) return;
+      
+      const D = Chart.defaults;
+      D.color = "rgba(255, 255, 255, 0.7)"; 
+      D.borderColor = "rgba(255, 255, 255, 0.05)"; 
+      D.font.family = '"Share Tech Mono", monospace'; 
+      D.font.size = 12; 
+      D.maintainAspectRatio = false;
+      D.animation.duration = matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 600;
+      
+      Object.assign(D.plugins.tooltip, { 
+        backgroundColor: "rgba(5, 8, 15, 0.9)", 
+        borderColor: "#38d9ff", 
+        borderWidth: 1, 
+        titleColor: "#39ff88", 
+        bodyColor: "#e8f5ff", 
+        cornerRadius: 0, 
+        padding: 10 
+      });
+
+      // Custom plugins for glowing effects
+      const glow = { 
+        id: "neonGlow", 
+        beforeDatasetDraw(c, a) { 
+          const ds = c.data.datasets[a.index]; 
+          c.ctx.save(); 
+          c.ctx.shadowColor = ds.borderColor; 
+          c.ctx.shadowBlur = 14; 
+        }, 
+        afterDatasetDraw(c) { c.ctx.restore(); } 
+      };
+      
+      const focus = { 
+        id: "focusPoint",
+        afterDatasetsDraw(c) {
+          const pt = c.getDatasetMeta(0).data[c.$cur]; 
+          if (!pt) return;
+          const col = c.$col || "#ffb02e", a = c.chartArea, ctx = c.ctx;
+          
+          ctx.save(); 
+          ctx.strokeStyle = rgba(col, 0.55); 
+          ctx.setLineDash([5, 5]); 
+          ctx.beginPath(); 
+          ctx.moveTo(pt.x, a.top); 
+          ctx.lineTo(pt.x, a.bottom); 
+          ctx.stroke();
+          
+          ctx.setLineDash([]); 
+          ctx.lineWidth = 2; 
+          ctx.strokeStyle = col; 
+          ctx.shadowColor = col; 
+          ctx.shadowBlur = 18; 
+          ctx.beginPath(); 
+          ctx.arc(pt.x, pt.y, 13, 0, Math.PI * 2); 
+          ctx.stroke(); 
+          ctx.restore();
+        } 
+      };
+      
+      Chart.register(glow);
+
+      routeChart = new Chart($("chart-route"), {
+        type: "line",
+        data: { 
+          labels: ROUTE.map((_, n) => "CP-" + String(n + 1).padStart(2, "0")),
+          datasets: [{ 
+            label: "Elevation (m)", 
+            data: ROUTE.map((p) => p.elev), 
+            borderColor: "#38d9ff", 
+            backgroundColor: "rgba(56, 217, 255, 0.2)", 
+            fill: "start", 
+            tension: 0.35, 
+            borderWidth: 2, 
+            pointRadius: 4, 
+            pointBackgroundColor: "#38d9ff", 
+            pointBorderColor: "#05080f", 
+            pointBorderWidth: 2 
+          }] 
+        },
+        options: { 
+          scales: { 
+            x: { grid: { display: false }, ticks: { maxRotation: 0, autoRotate: false, autoSkip: false, font: { size: 11 } } }, 
+            y: { min: -4600, max: -3400, ticks: { stepSize: 400 } } 
+          }, 
+          plugins: { legend: { display: false } } 
+        }, 
+        plugins: [focus]
+      });
+
+      threatChart = new Chart($("chart-threat"), {
+        type: "radar",
+        data: { 
+          labels: AXES, 
+          datasets: [{ 
+            label: "Threat index", 
+            data: [0, 0, 0, 0, 0], 
+            borderColor: "#ffb02e", 
+            backgroundColor: "rgba(255, 176, 46, 0.12)", 
+            pointBackgroundColor: "#ffb02e", 
+            pointRadius: 3, 
+            borderWidth: 2 
+          }] 
+        },
+        options: { 
+          layout: { padding: { left: 24, right: 24, top: 4, bottom: 4 } }, 
+          scales: { r: { min: 0, max: 100, ticks: { display: false }, pointLabels: { font: { size: 11 } } } }, 
+          plugins: { legend: { display: false } } 
+        }
+      });
+    }
+
+    function renderScanner(p, i) {
+      $("mm-tag").textContent = "CP-" + String(i + 1).padStart(2, "0");
+      $("mm-obj").textContent = SHORT[i].o;
+      
+      if (!window.Chart) { 
+        document.querySelectorAll(".scan__box").forEach((b) => { 
+          b.textContent = ""; 
+          b.appendChild(el("p", null, "CHART LIBRARY OFFLINE")); 
+        }); 
+        return; 
+      }
+      
+      if (!routeChart) buildScanner();
+      if (!routeChart) return;
+      
+      const col = SEV_COLOR[p.sev] || "#ffb02e", vals = threatProfile(p, i);
+      
+      const ds = routeChart.data.datasets[0];
+      ds.pointRadius = ROUTE.map((_, n) => (n === i ? 9 : 4)); 
+      ds.pointBackgroundColor = ROUTE.map((_, n) => (n === i ? col : "#38d9ff"));
+      routeChart.$cur = i; 
+      routeChart.$col = col; 
+      routeChart.update();
+      
+      const r = threatChart.data.datasets[0];
+      r.data = vals; 
+      r.borderColor = col; 
+      r.pointBackgroundColor = col; 
+      r.backgroundColor = rgba(col, 0.12); 
+      threatChart.update();
+    }
+
+    /* ======================================================================
+       8. SCENE NAVIGATION (Chapter Flow)
+       ====================================================================== */
+    let sc = 0;
+    
+    const NARR = [
+      (p, i) => ["CHAPTER " + (i + 1), i ? `Your rover drives ${p.leg.toFixed(1)} km and arrives at ${p.name}.` : `Your journey begins at the ${p.name}.`],
+      () => ["MISSION BRIEFING", "Here is what you need to do, and what you will see."],
+      () => ["SCAN", "Check your crew vitals and the route ahead before you move."],
+      () => ["INCIDENT", "Something is happening in this sector. Read the alert carefully."],
+      () => ["GUIDE", "Follow the steps below. Tap each one when you have done it."] 
+    ];
+    
+    function stepCount() { 
+      const n = document.querySelectorAll("#adv-steps .done").length;
+      const t = ROUTE[cur].steps.length; 
+      $("tab-n").textContent = n + "/" + t; 
+      $("btn-next").classList.toggle("ready", sc === 4 && n === t); 
+    }
+    
+    function scene(n) {
+      sc = n; 
+      document.querySelectorAll(".scene").forEach((x) => x.classList.toggle("on", +x.dataset.s === n));
+      
+      document.querySelectorAll("#rail button").forEach((b, k) => { 
+        b.classList.toggle("on", k === n); 
+        b.classList.toggle("done", k < n); 
+        if (k === n) b.classList.remove("alert"); 
+      });
+      
+      const [t, m] = NARR[n](ROUTE[cur], cur); 
+      $("narr-t").textContent = t; 
+      $("narr").textContent = m;
+      
+      const end = cur === ROUTE.length - 1;
+      $("btn-back").disabled = n === 0; 
+      $("launch").hidden = n !== 4;
+      $("btn-next").textContent = n < 4 ? "CONTINUE ▸" : end ? "✔ FINISH" : "NEXT CHECKPOINT ▸";
+      
+      document.querySelector(".scenes").scrollTop = 0; 
+      stepCount();
+      
+      if (n === 2) { 
+        routeChart && routeChart.resize(); 
+        threatChart && threatChart.resize(); 
+      }
+      if (n === 3) playIncident(ROUTE[cur]);
+    }
+    
+    const next = () => { 
+      if (sc < 4) scene(sc + 1); 
+      else if (cur < ROUTE.length - 1) select(cur + 1); 
+      else { 
+        saveVitals(ROUTE[cur]); 
+        location.href = "weather.html"; 
+      } 
+    };
+    
+    const back = () => { if (sc > 0) scene(sc - 1); };
+    
+    $("rail").addEventListener("click", (e) => { 
+      const b = e.target.closest("button"); 
+      if (b) scene(+b.dataset.s); 
+    });
+    
+    $("btn-back").addEventListener("click", back);
+
+    /* ======================================================================
+       9. VITALS RENDERER
+       ====================================================================== */
+    const lv = (v, a, b, w) => (v >= a && v <= b ? "ok" : v >= a - w && v <= b + w ? "warn" : "crit");
+    
+    function renderVit(p) {
+      const sys = +p.bp.split("/")[0];
+      const o = p.o2 > 95 ? "ok" : p.o2 >= 75 ? "warn" : "crit";
+      const T = (ic, v, u, st, cls) => `<div class="vt ${cls || ""}" data-s="${st}"><span class="i">${ic}</span><b>${v}</b><small>${u}</small></div>`;
+      
+      $("vit").innerHTML = 
+        T("❤️", p.hr, "bpm", lv(p.hr, 60, 100, 20)) + 
+        T("🫁", p.o2 + "%", "oxygen", o) + 
+        T("🌡", p.temp, "°C", lv(p.temp, 36.1, 37.2, .6)) + 
+        T("🩸", p.bp, "mmHg", lv(sys, 90, 129, 15)) + 
+        T("📡", p.status, "status", p.sev === "critical" || p.status === "PEAK ALERT" ? "crit" : p.sev === "warning" ? "warn" : "ok", "st");
+    }
+
+    /* ======================================================================
+       10. NASA TREK ORBITAL TILE LOADER
+       ====================================================================== */
+    const TREK = "https://trek.nasa.gov/tiles/Mars/EQ/";
+    const LAYERS = ["CTX_beta01_uncontrolled_5m_Caltech", "Mars_MGS_MOLA_ClrShade_merge_global_463m"];
+    const capsC = {};
+    let mz = 12, fit = false, mvTok = 0, li = 0;
+    
+    function setMode(m) { 
+      $("tmap").dataset.m = m; 
+      document.querySelectorAll(".mtabs button").forEach((x) => x.classList.toggle("on", x.dataset.m === m)); 
+      if (m === "map") drawOrbital(); 
+    }
+    
+    // Fetch capabilities XML from NASA Trek
+    function getCaps(layer) {
+      return capsC[layer] || (capsC[layer] = fetch(TREK + layer + "/1.0.0/WMTSCapabilities.xml")
+        .then((r) => { 
+          if (!r.ok) throw new Error(r.status); 
+          return r.text(); 
+        })
+        .then((t) => {
+          const d = new DOMParser().parseFromString(t, "text/xml");
+          const q = (n, tag) => [...n.getElementsByTagNameNS("*", tag)];
+          const id = (n) => q(n, "Identifier")[0].textContent;
+          const tms = q(d, "TileMatrixSet").find((x) => q(x, "TileMatrix").length);
+          const tpl = q(d, "ResourceURL")[0].getAttribute("template");
+          const st = q(d, "Style")[0];
+          const g = (n, tag) => +q(n, tag)[0].textContent;
+          
+          return { 
+            tpl: tpl.replace("{Style}", st ? id(st) : "default").replace("{TileMatrixSet}", id(tms)),
+            lv: q(tms, "TileMatrix").map((m) => ({ 
+              id: id(m), 
+              W: g(m, "MatrixWidth") * g(m, "TileWidth"), 
+              H: g(m, "MatrixHeight") * g(m, "TileHeight"), 
+              tw: g(m, "TileWidth"), 
+              th: g(m, "TileHeight") 
+            })) 
+          };
+        })
+        .catch((e) => { delete capsC[layer]; throw e; })
+      );
+    }
+    
+    // Draw map tiles
+    async function drawOrbital() {
+      const view = $("mv"), w = view.clientWidth, h = view.clientHeight; 
+      if (!w || !h) return;
+      
+      const my = ++mvTok, st = $("mv-st"), ctl = view.querySelector(".mv__ctl"); 
+      st.textContent = "LOADING ORBITAL IMAGERY…";
+      
+      const failed = () => { 
+        if (my !== mvTok) return; 
+        if (li < LAYERS.length - 1) { li++; drawOrbital(); } 
+        else { li = 0; st.textContent = "ORBITAL IMAGERY FAILED TO LOAD · check connection, then press FIT or ± to retry"; } 
+      };
+      
+      let caps; 
+      try { caps = await getCaps(LAYERS[li]); } 
+      catch (e) { return failed(); }
+      
+      if (my !== mvTok) return;
+      
+      const la = ROUTE.map((p) => p.lat), lo = ROUTE.map((p) => p.lon);
+      const dLa = Math.max(...la) - Math.min(...la), dLo = Math.max(...lo) - Math.min(...lo);
+      const top = caps.lv.length - 1;
+      
+      let z = Math.min(mz, top), cl = ROUTE[cur].lat, cn = ROUTE[cur].lon;
+      
+      // Auto-fit zoom bounds
+      if (fit) { 
+        cl = (Math.max(...la) + Math.min(...la)) / 2; 
+        cn = (Math.max(...lo) + Math.min(...lo)) / 2;
+        for (z = top; z > 0; z--) { 
+          const L = caps.lv[z]; 
+          if (dLa / 180 * L.H + 80 < h && dLo / 360 * L.W + 80 < w) break; 
+        } 
+      }
+      
+      const L = caps.lv[z];
+      const wx = (v) => (v + 180) / 360 * L.W;
+      const wy = (v) => (90 - v) / 180 * L.H;
+      const ox = wx(cn) - w / 2, oy = wy(cl) - h / 2;
+      
+      view.querySelectorAll(".mv__t, svg").forEach((n) => n.remove());
+      st.textContent = `NASA Trek · ${LAYERS[li].startsWith("CTX") ? "MRO CTX satellite mosaic" : "MOLA colour shaded relief"} · ~${Math.round(21296900 / L.W)} m/px`;
+      
+      const jobs = [], cols = L.W / L.tw, rows = L.H / L.th;
+      for (let ty = Math.max(0, Math.floor(oy / L.th)); ty <= Math.min(rows - 1, Math.floor((oy + h) / L.th)); ty++) {
+        for (let tx = Math.max(0, Math.floor(ox / L.tw)); tx <= Math.min(cols - 1, Math.floor((ox + w) / L.tw)); tx++) {
+          jobs.push([tx, ty]);
+        }
+      }
+      
+      let bad = 0;
+      jobs.forEach(([tx, ty]) => {
+        const im = new Image(); 
+        im.className = "mv__t"; 
+        im.alt = ""; 
+        im.draggable = false; 
+        im.referrerPolicy = "no-referrer";
+        im.style.cssText = `left:${tx * L.tw - ox}px;top:${ty * L.th - oy}px;width:${L.tw}px;height:${L.th}px`;
+        
+        im.onerror = () => { im.remove(); if (++bad === jobs.length) failed(); };
+        im.src = caps.tpl.replace("{TileMatrix}", L.id).replace("{TileRow}", ty).replace("{TileCol}", tx); 
+        view.insertBefore(im, ctl);
+      });
+      
+      const X = (p) => (wx(p.lon) - ox).toFixed(1);
+      const Y = (p) => (wy(p.lat) - oy).toFixed(1);
+      const pts = ROUTE.map((p) => X(p) + "," + Y(p));
+      
+      const sv = svg("svg", { viewBox: `0 0 ${w} ${h}`, "aria-hidden": "true" });
+      sv.append(
+        svg("polyline", { class: "rl", points: pts.join(" ") }), 
+        svg("polyline", { class: "rp", points: pts.join(" ") }), 
+        svg("polyline", { class: "rd", points: pts.slice(0, cur + 1).join(" ") })
+      );
+      
+      ROUTE.forEach((p) => {
+        const on = p.id === cur;
+        const c = svg("circle", { class: on ? "ms" : "mk" + (visited.has(p.id) ? " v" : ""), cx: X(p), cy: Y(p), r: on ? 9 : 6 });
+        c.addEventListener("click", () => select(p.id)); 
+        sv.append(c);
+        sv.append(svg("text", { x: +X(p) + 12, y: +Y(p) + 5 }, String(p.id + 1).padStart(2, "0") + (on ? " " + p.name : "")));
+      });
+      
+      view.insertBefore(sv, ctl);
+    }
+    
+    $("mv").querySelector(".mv__ctl").addEventListener("click", (e) => { 
+      const b = e.target.closest("button"); 
+      if (!b) return;
+      if (b.dataset.z === "fit") fit = true; 
+      else { 
+        fit = false; 
+        mz = Math.max(6, Math.min(14, mz + +b.dataset.z)); 
+      } 
+      li = 0; 
+      drawOrbital(); 
+    });
+    
+    let rsz; 
+    window.addEventListener("resize", () => { 
+      clearTimeout(rsz); 
+      rsz = setTimeout(() => $("tmap").dataset.m === "map" && drawOrbital(), 200); 
+    });
+
+    /* ======================================================================
+       11. REAL IMAGERY LOADER
+       ====================================================================== */
+    const IMG = [
+      "https://d2pn8kiwq2w21t.cloudfront.net/images/jpegPIA16140.width-1600.jpg",
+      "https://d2pn8kiwq2w21t.cloudfront.net/images/1-pano.2e16d0ba.fill-512x288-c70.format-jpeg.jpg",
+      "https://assets.science.nasa.gov/content/dam/science/psd/mars/resources/detail_files/2/5/25098_PIA23974-16.jpg",
+      "https://assets.science.nasa.gov/dynamicimage/assets/science/psd/mars/resources/detail_files/2/7/27696_PIA26019-web.jpg?w=1400&h=372&fit=clip&crop=faces%2Cfocalpoint",
+      "https://assets.science.nasa.gov/dynamicimage/assets/science/psd/mars/internal_resources/1541.png?w=1783&h=1318&fit=clip&crop=faces%2Cfocalpoint",
+      "https://assets.science.nasa.gov/dynamicimage/assets/science/psd/photojournal/pia/pia26/pia26551/PIA26551.jpg?w=1536&h=251&fit=clip&crop=faces%2Cfocalpoint"
+    ];
+    
+    function showImg(i) {
+      const pv = $("pov"), im = $("pov-img"), row = pv.parentElement; 
+      pv.classList.remove("has-img", "wide"); 
+      row.classList.remove("wide-row");
+      
+      im.onload = () => { 
+        pv.classList.add("has-img"); 
+        const wd = im.naturalWidth / im.naturalHeight > 2.2; 
+        pv.classList.toggle("wide", wd); 
+        row.classList.toggle("wide-row", wd); 
+        pv.style.setProperty("--img", `url("${IMG[i]}")`); 
+      };
+      
+      im.onerror = () => { 
+        pv.classList.remove("has-img", "wide"); 
+        row.classList.remove("wide-row"); 
+      };
+      
+      im.src = IMG[i];
+    }
+
+    /* ======================================================================
+       12. CORE SELECTION & INITIALIZATION
+       ====================================================================== */
+    function select(i, silent) {
+      cur = i; 
+      const p = ROUTE[i]; 
+      visited.add(i); 
+      save();
+      if (!silent) saveVitals(p);
+      
+      // Update sidebar state
+      list.querySelectorAll(".cp").forEach((b, n) => { 
+        b.classList.toggle("is-active", n === i); 
+        b.classList.toggle("is-visited", visited.has(n)); 
+        b.toggleAttribute("aria-current", n === i); 
+        if (n === i) b.setAttribute("aria-current", "step"); 
+      });
+      
+      // Populate panel titles
+      $("b-num").textContent = String(i + 1).padStart(2, "0"); 
+      $("b-title").textContent = p.name; 
+      $("b-coords").textContent = fmtLL(p);
+      
+      renderScanner(p, i);
+      renderVit(p);
+      
+      // Parse Briefing Intel
+      const parts = {}; 
+      p.intel.replace(/(Objective|Terrain|Sights):\s*(.*?)(?=\s+(?:Objective|Terrain|Sights):|$)/g, (m, k, v) => (parts[k] = v));
+      $("g-obj").textContent = parts.Objective || "--"; 
+      $("g-ter").textContent = parts.Terrain || "--"; 
+      $("g-sig").textContent = parts.Sights || "--";
+      
+      // Guide and Steps
+      $("adv-text").textContent = p.advice; 
+      $("adv-module").textContent = "🧩 " + p.module;
+      
+      const ol = $("adv-steps"); 
+      ol.textContent = "";
+      p.steps.forEach((t) => { 
+        const li = el("li", null, t); 
+        li.addEventListener("click", () => { li.classList.toggle("done"); stepCount(); }); 
+        ol.appendChild(li); 
+      });
+      stepCount();
+      
+      // Setup Rover POV aesthetics
+      const pov = $("pov").style;
+      pov.setProperty("--sky1", p.sky[0]); 
+      pov.setProperty("--sky2", p.sky[1]); 
+      pov.setProperty("--far", p.far); 
+      pov.setProperty("--near", p.near); 
+      pov.setProperty("--ridge", p.ridge);
+      
+      $("pov-cp").textContent = "CP-" + String(i + 1).padStart(2, "0"); 
+      $("pov-pos").textContent = fmtLL(p);
+      $("pov-leg").textContent = i ? `LEG ${p.leg.toFixed(1)} km · TOTAL ${p.total.toFixed(1)} km` : "START POINT";
+
+      // Global Progress
+      const n = visited.size;
+      $("prog-text").textContent = `${n} / ${ROUTE.length}`; 
+      $("prog-bar").style.width = (n / ROUTE.length * 100) + "%"; 
+      $("stat").classList.toggle("is-done", n === ROUTE.length);
+      
+      drawMap(); 
+      showImg(i); 
+      scene(0); 
+      $("tmap").dataset.m === "map" && drawOrbital();
+    }
+
+    // Event Bindings
+    $("btn-next").addEventListener("click", next);
+    $("launch").addEventListener("click", () => saveVitals(ROUTE[cur]));
+    $("btn-replay").addEventListener("click", () => playIncident(ROUTE[cur]));
+    
+    // Global Keyboard Interaction
+    document.addEventListener("keydown", (e) => { 
+      if (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
+      if (e.key === "ArrowRight") next(); 
+      else if (e.key === "ArrowLeft") back(); 
+      else if (e.key === "ArrowDown") select(Math.min(cur + 1, ROUTE.length - 1)); 
+      else if (e.key === "ArrowUp") select(Math.max(cur - 1, 0)); 
+      else if (/^[1-6]$/.test(e.key)) select(+e.key - 1); 
+    });
+    
+    document.querySelector(".mtabs").addEventListener("click", (e) => { 
+      const b = e.target.closest("button"); 
+      if (b) setMode(b.dataset.m); 
+    });
+    
+    // Start Campaign
+    select(0, true);
+    
+  })();
+  </script>
+</body>
+</html>

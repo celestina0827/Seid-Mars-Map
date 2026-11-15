@@ -53,4 +53,4 @@ Developed for the **NASA Space Apps Challenge 2026**
   * Jordan Beh Jian Xiang
 
 ## ⚖️ Disclaimer
-*NASA, JPL, and USGS resources belong to their respective owners. This hackathon project is an independent educational entry and is not officially affiliated with or endorsed by NASA or the USGS[cite: 1].*
+*NASA, JPL, and USGS resources belong to their respective owners. This hackathon project is an independent educational entry and is not officially affiliated with or endorsed by NASA or the USGS.*

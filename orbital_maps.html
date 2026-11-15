@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ARES-1 // Orbital Navigation</title>
+  
+  <!-- ======================================================================
+       EXTERNAL RESOURCES: Fonts, Shared Styles & Plotly
+       ====================================================================== -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Share+Tech+Mono&display=swap">
+  <link rel="stylesheet" href="campaign.css">
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  
+  <style>
+    /* ======================================================================
+       1. MAP LAYOUT & STRUCTURE
+       ====================================================================== */
+    .map-layout { 
+      display: grid; 
+      grid-template-columns: 290px minmax(0, 1fr) 340px; 
+      gap: 16px; 
+      height: calc(100vh - 110px); 
+      min-height: 520px; 
+    }
+    
+    .map-layout > .panel { 
+      min-height: 0; 
+    }
+    
+    /* Progress Bar */
+    .bar { 
+      height: 8px; 
+      background: var(--bg-0); 
+      border: 1px solid var(--line); 
+    }
+    .bar i { 
+      display: block; 
+      height: 100%; 
+      width: 0; 
+      background: var(--green); 
+      box-shadow: var(--glow-g); 
+      transition: width .5s; 
+    }
+    
+    .sub { 
+      font-size: 12px; 
+      color: var(--dim); 
+      display: flex; 
+      justify-content: space-between; 
+      gap: 8px; 
+    }
+
+    /* ======================================================================
+       2. LADDER (Mission Level Select UI)
+       ====================================================================== */
+    .ladder { 
+      display: grid; 
+      gap: 4px; 
+    }
+    
+    .stop { 
+      --c: var(--line); 
+      display: grid; 
+      grid-template-columns: 34px minmax(0, 1fr) auto; 
+      align-items: center; 
+      gap: 8px; 
+      min-height: 40px; 
+      padding: 4px 10px; 
+      text-align: left; 
+      color: var(--text); 
+      font: 13px var(--mono); 
+      background: rgba(255, 255, 255, .03); 
+      border: 1px solid var(--line); 
+      border-left: 3px solid var(--c); 
+      cursor: pointer; 
+    }
+    .stop b { 
+      font: 700 12px var(--head); 
+      color: var(--c); 
+    }
+    
+    .stop[data-t="transit"] { 
+      margin-left: 16px; 
+      min-height: 34px; 
+      font-size: 12px; 
+    }
+    
+    .stop[data-s="done"] { --c: var(--green); } 
+    .stop[data-s="cur"] { --c: var(--amber); background: rgba(255, 176, 46, .1); } 
+    .stop[data-s="lock"] { opacity: .5; }
+    
+    .stop[aria-current="true"] { outline: 1px solid var(--blue); }
+    .stop:hover { border-color: var(--blue); }
+    
+    /* Landmark Accordion */
+    details.lm { border: 1px solid var(--line); }
+    details.lm summary { 
+      padding: 10px 12px; 
+      cursor: pointer; 
+      color: var(--blue); 
+      font: 700 12px var(--head); 
+      letter-spacing: .1em; 
+    }
+    details.lm .ladder { padding: 0 8px 8px; }
+    
+    .lm-info { 
+      margin: 0; 
+      padding: 8px 12px; 
+      font-size: 12px; 
+      color: var(--dim); 
+      border-left: 3px solid var(--blue); 
+    }
+
+    /* ======================================================================
+       3. MAP DISPLAY TABS & VIEWS
+       ====================================================================== */
+    .map-display { padding: 0; }
+    
+    .map-tabs { 
+      display: flex; 
+      flex: none; 
+      border-bottom: 1px solid var(--line); 
+      background: rgba(10, 17, 29, .8); 
+    }
+    
+    .tab-btn { 
+      flex: 1; 
+      padding: 12px 8px; 
+      color: var(--dim); 
+      font: 700 12px var(--head); 
+      letter-spacing: .1em; 
+      background: none; 
+      border: 0; 
+      border-bottom: 2px solid transparent; 
+      cursor: pointer; 
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { 
+      color: var(--green); 
+      border-bottom-color: var(--green); 
+      background: rgba(57, 255, 136, .05); 
+    }
+    
+    .map-view { 
+      display: none; 
+      flex: 1; 
+      min-height: 0; 
+      position: relative; 
+      overflow: auto; 
+      background: var(--bg-0); 
+    }
+    .map-view.active { display: block; }
+    
+    #mars-globe { 
+      width: 100%; 
+      height: 100%; 
+      min-height: 380px; 
+    }
+    
+    .zoom { 
+      position: absolute; 
+      top: 10px; 
+      right: 10px; 
+      z-index: 3; 
+      display: flex; 
+      gap: 6px; 
+    }
+    .zoom button { 
+      padding: 6px 10px; 
+      font: 700 12px var(--head); 
+      color: var(--blue); 
+      background: rgba(5, 8, 15, .8); 
+      border: 1px solid var(--blue); 
+      cursor: pointer; 
+    }
+    .zoom button[aria-pressed="true"] { 
+      color: var(--bg-0); 
+      background: var(--blue); 
+    }
+    
+    .mapwrap { position: relative; }
+    .mapwrap img { display: block; width: 100%; height: auto; }
+    
+    .pin { 
+      position: absolute; 
+      transform: translate(-50%, -50%); 
+      display: flex; 
+      align-items: center; 
+      gap: 6px; 
+      padding: 0; 
+      font: 700 12px var(--head); 
+      color: var(--amber); 
+      background: none; 
+      border: 0; 
+      cursor: pointer; 
+      text-shadow: 0 0 6px #000; 
+    }
+    .pin i { 
+      width: 14px; 
+      height: 14px; 
+      border-radius: 50%; 
+      background: var(--amber); 
+      box-shadow: 0 0 0 4px rgba(255, 176, 46, .3), var(--glow-a); 
+    }
+
+    /* ======================================================================
+       4. TELEMETRY GAUGES & INTEL DOSSIER
+       ====================================================================== */
+    .hud { 
+      display: grid; 
+      grid-template-columns: repeat(2, minmax(0, 1fr)); 
+      gap: 12px 8px; 
+    }
+    
+    @property --p { syntax: "<number>"; inherits: false; initial-value: 0; }
+    
+    .g { 
+      --c: var(--green); 
+      display: grid; 
+      justify-items: center; 
+      gap: 4px; 
+      font-size: 12px; 
+      color: var(--dim); 
+    }
+    .g[data-s="warn"] { --c: var(--amber); } 
+    .g[data-s="crit"] { --c: var(--red); }
+    
+    .g i { 
+      position: relative; 
+      display: grid; 
+      place-items: center; 
+      width: 88px; 
+      height: 88px; 
+      border-radius: 50%; 
+      background: conic-gradient(var(--c) calc(var(--p) * 360deg), var(--bg-2) 0); 
+      transition: --p .7s; 
+      box-shadow: 0 0 12px color-mix(in srgb, var(--c) 40%, transparent); 
+    }
+    .g i::before { 
+      content: ""; 
+      position: absolute; 
+      inset: 8px; 
+      border-radius: 50%; 
+      background: var(--bg-1); 
+    }
+    .g b { 
+      position: relative; 
+      font: 700 17px var(--head); 
+      color: #fff; 
+    }
+    
+    .badge { 
+      align-self: start; 
+      padding: 2px 10px; 
+      font: 700 12px var(--head); 
+      letter-spacing: .1em; 
+      color: var(--c, var(--green)); 
+      border: 1px solid var(--c, var(--green)); 
+    }
+    
+    .intel { 
+      padding: 8px 12px; 
+      border-left: 3px solid var(--blue); 
+      background: rgba(56, 217, 255, .05); 
+    }
+    .intel[data-k="dangers"] { 
+      border-color: var(--amber); 
+      background: rgba(255, 176, 46, .07); 
+    }
+    .intel b { 
+      display: block; 
+      font: 700 12px var(--head); 
+      letter-spacing: .06em; 
+      color: var(--blue); 
+    }
+    .intel[data-k="dangers"] b { color: var(--amber); }
+    .intel p { margin: 2px 0 0; }
+    
+    .go { 
+      min-height: 46px; 
+      font: 700 13px var(--head); 
+      letter-spacing: .1em; 
+      color: var(--bg-0); 
+      background: var(--amber); 
+      border: 0; 
+      cursor: pointer; 
+    }
+    .go:disabled { opacity: .35; cursor: not-allowed; }
+    .go.alt { 
+      color: var(--blue); 
+      background: transparent; 
+      border: 1px solid var(--blue); 
+    }
+    
+    .warn { 
+      margin: 0; 
+      padding: 8px 12px; 
+      color: var(--red); 
+      border: 1px solid var(--red); 
+      background: rgba(255, 59, 87, .1); 
+    }
+    .warn a { color: #fff; }
+    
+    .toast { 
+      position: fixed; 
+      left: 50%; 
+      bottom: 24px; 
+      z-index: 60; 
+      transform: translateX(-50%); 
+      padding: 10px 18px; 
+      color: var(--bg-0); 
+      font: 700 13px var(--head); 
+      background: var(--green); 
+      box-shadow: var(--glow-g); 
+    }
+    
+    .stat[data-s="crit"] b { color: var(--red); text-shadow: none; } 
+    .stat[data-s="warn"] b { color: var(--amber); text-shadow: none; }
+    
+    @media (max-width: 1100px) { 
+      .map-layout { grid-template-columns: minmax(0, 1fr); height: auto; } 
+      .map-display { height: 72vh; } 
+      .stage { height: auto; } 
+    }
+  </style>
+</head>
+<body>
+  
+  <!-- ======================================================================
+       HEADER
+       ====================================================================== -->
+  <header class="top">
+    <div>
+      <h1>ARES-1 // Orbital navigation</h1>
+      <div class="top__sub">Mount Sharp ascent · Gale Crater traverse</div>
+    </div>
+    <div class="top__right">
+      <span class="stat">XP <b id="xp">0</b></span>
+      <span class="stat">Rank <b id="rank">Cadet</b></span>
+      <span class="stat" id="crew-st">Crew <b id="crew">--</b></span>
+      <a class="back" href="weather.html">Threat scan</a>
+      <a class="back" href="campaign.html">← Campaign</a>
+    </div>
+  </header>
+
+  <!-- ======================================================================
+       MAIN CONTENT: Three-Column Layout
+       ====================================================================== -->
+  <main class="stage" style="grid-template-columns: 1fr">
+    <div class="map-layout">
+
+      <!-- LEFT: Ascent Route & USGS Recon -->
+      <section class="panel" aria-label="Mission">
+        <h2><span class="h2__t">🏔 Ascent</span><em id="prog-t">0 / 0</em></h2>
+        <div class="bar" aria-hidden="true"><i id="prog"></i></div>
+        <div class="ladder" id="ladder"></div>
+        <details class="lm" id="lm-box">
+          <summary id="lm-t">USGS recon</summary>
+          <div class="ladder" id="lm-list"></div>
+        </details>
+        <p class="lm-info" id="lm-info" hidden></p>
+      </section>
+
+      <!-- CENTER: Map Display (Globe, Optical, MOLA) -->
+      <section class="panel map-display" aria-label="Map">
+        <div class="map-tabs" role="tablist">
+          <button class="tab-btn active" data-tab="tab-3d" role="tab">🌐 Globe</button>
+          <button class="tab-btn" data-tab="tab-opt" role="tab">📸 Optical map</button>
+          <button class="tab-btn" data-tab="tab-mola" role="tab">📊 MOLA elevation</button>
+        </div>
+        
+        <div id="tab-3d" class="map-view active">
+          <div class="zoom">
+            <button type="button" id="z-t" aria-pressed="true">🔍 Close</button>
+            <button type="button" id="z-g" aria-pressed="false">🌐 Planet</button>
+          </div>
+          <div id="mars-globe" role="img" aria-label="3D globe of Mars with your route up Mount Sharp"></div>
+        </div>
+        
+        <div id="tab-opt" class="map-view">
+          <div class="mapwrap">
+            <img src="map_of_mars.jpg" alt="Mars global optical map">
+            <button class="pin" type="button"><i></i>Route</button>
+          </div>
+        </div>
+        
+        <div id="tab-mola" class="map-view">
+          <div class="mapwrap">
+            <img src="TES_mola.jpg" alt="MOLA elevation map">
+            <button class="pin" type="button"><i></i>Route</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: Suit Telemetry & Intel -->
+      <section class="panel" aria-label="Telemetry and intel">
+        <h2><span class="h2__t">🩺 EVA suit</span><span class="badge" id="st">--</span></h2>
+        <div class="hud" id="hud"></div>
+        <div class="sub"><span id="stop-t">--</span><span id="stop-c">--</span></div>
+        <div id="intel" style="display:grid;gap:8px"></div>
+        <p class="warn" id="stand" hidden></p>
+        <button class="go" id="go" type="button">Complete stop</button>
+        <button class="go alt" id="reset" type="button" style="min-height:34px">Restart mission</button>
+      </section>
+
+    </div>
+  </main>
+  
+  <div class="toast" id="toast" role="status" hidden></div>
+
+  <!-- ======================================================================
+       SCRIPTS
+       ====================================================================== -->
+  <script src="mars_data.js"></script>
+  <script>window.MARS_GLOBE_NO_CONTROLS = true;</script>
+  <script src="mars-globe.js"></script>
+  <script>
+    /* ==========================================================================
+       All content comes from shared data: mars_data.js (waypoints, landmarks) 
+       and localStorage ares1.* (written by weather.html).
+       Nothing about stops, vitals or landmarks is hardcoded into this page.
+       ========================================================================== */
+    (function () {
+      "use strict";
+      
+      // --- 1. Utilities & Data Initialization ---
+      const $ = (id) => document.getElementById(id);
+      const $$ = (s) => [...document.querySelectorAll(s)];
+      
+      // LocalStorage helpers
+      const ls = (k, v) => { 
+        try { 
+          if (v === undefined) return localStorage.getItem("ares1." + k); 
+          localStorage.setItem("ares1." + k, v); 
+        } catch (e) {} 
+        return null; 
+      };
+      
+      const rd = (k, d) => { 
+        try { 
+          const v = JSON.parse(ls(k)); 
+          return v == null ? d : v; 
+        } catch (e) { 
+          return d; 
+        } 
+      };
+      
+      const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+      const nl = (lon) => ((((+lon + 180) % 360) + 360) % 360) - 180;
+      const clamp = (v) => Math.max(0, Math.min(1, v));
+      const lvl = (v, a, b, w) => (v >= a && v <= b ? "ok" : v >= a - w && v <= b + w ? "warn" : "crit");
+      
+      const D = window.MARS_DATA || {};
+      const W = D.waypoints || [];
+      const LM = D.landmarks || [];
+      
+      if (!W.length) { 
+        $("ladder").textContent = "No waypoints in mars_data.js. Re-run export_data.py."; 
+        return; 
+      }
+
+      const isMain = (w) => w.type === "Main Milestone";
+      const pts = (w) => (isMain(w) ? 100 : 40);
+      const code = (w) => (/^(?:Transit )?([\d.]+):/.exec(w.name) || [, ""])[1];
+      const label = (w) => w.name.replace(/^(?:Transit )?[\d.]+:\s*/, "");
+      const short = (w) => label(w).replace(/\s*\(.*\)/, "");
+      
+      const RANKS = [[0, "Cadet"], [250, "Surveyor"], [600, "Pathfinder"], [1000, "Summiteer"]];
+      const STATUS = { 
+        OPTIMAL: "ok", 
+        ACTIVE: "ok", 
+        EXERTION: "warn", 
+        "HIGH LOAD": "warn", 
+        CAUTION: "warn", 
+        "COLD ZONE": "warn", 
+        "PEAK ALERT": "crit" 
+      };
+      const COL = { ok: "var(--green)", warn: "var(--amber)", crit: "var(--red)" };
+
+      let done = new Set(rd("done", []));
+      let found = new Set(rd("lm", []));
+      let view = 0;
+      let close = true;
+      
+      const cur = () => { 
+        const i = W.findIndex((w) => !done.has(w.id)); 
+        return i < 0 ? W.length : i; 
+      };
+      
+      const xp = () => W.reduce((t, w) => t + (done.has(w.id) ? pts(w) : 0), 0) + found.size * 10;
+      
+      const save = () => { 
+        ls("done", JSON.stringify([...done])); 
+        ls("lm", JSON.stringify([...found])); 
+      };
+      
+      function toast(t) { 
+        const e = $("toast"); 
+        e.textContent = t; 
+        e.hidden = false; 
+        clearTimeout(toast.t); 
+        toast.t = setTimeout(() => (e.hidden = true), 2600); 
+      }
+
+      /* ======================================================================
+         2. LEFT PANEL: Ladder & Landmark Recon
+         ====================================================================== */
+      function drawLadder() {
+        const c = cur();
+        
+        $("ladder").innerHTML = W.map((w, i) => {
+          const s = done.has(w.id) ? "done" : i === c ? "cur" : "lock";
+          const icon = s === "done" ? "✔" : s === "lock" ? "🔒" : "▶";
+          const currentAttr = i === view ? 'aria-current="true"' : "";
+          
+          return `<button type="button" class="stop" data-i="${i}" data-s="${s}" data-t="${isMain(w) ? "main" : "transit"}" ${currentAttr}>
+                    <b>${code(w)}</b>
+                    <span>${esc(label(w))}</span>
+                    <small>${icon}</small>
+                  </button>`;
+        }).join("");
+        
+        $("prog").style.width = (done.size / W.length) * 100 + "%";
+        $("prog-t").textContent = done.size + " / " + W.length;
+        $("lm-t").textContent = `USGS recon · ${found.size}/${LM.length}`;
+        
+        $("lm-list").innerHTML = LM.map((l, i) => {
+          const isFound = found.has(l.name);
+          return `<button type="button" class="stop" data-lm="${i}" data-s="${isFound ? "done" : "cur"}" style="grid-template-columns:1fr auto">
+                    <span>${esc(l.name)}</span>
+                    <small>${isFound ? "✔" : "+10"}</small>
+                  </button>`;
+        }).join("");
+      }
+
+      /* ======================================================================
+         3. RIGHT PANEL: Suit Telemetry (Tweened Gauges) & Intel Dossier
+         ====================================================================== */
+      const G = [
+        ["❤️ Heart", "bpm", 40, 160], 
+        ["🩸 Pressure", "mmHg", 70, 170], 
+        ["🌡 Temp", "°C", 35, 39], 
+        ["🫁 Oxygen", "%", 50, 100]
+      ];
+      
+      $("hud").innerHTML = G.map((g) => `
+        <div class="g">
+          <i><b></b></i>
+          <span>${g[0]} · ${g[1]}</span>
+        </div>
+      `).join("");
+      
+      function drawHUD(w) {
+        const v = w.vitals;
+        const sys = parseInt(v.bp, 10);
+        const vals = [
+          [v.hr, v.hr, lvl(v.hr, 60, 100, 15)], 
+          [v.bp, sys, lvl(sys, 90, 130, 12)], 
+          [v.temp.toFixed(1), v.temp, lvl(v.temp, 36.1, 37.3, .5)], 
+          [v.o2, v.o2, v.o2 >= 90 ? "ok" : v.o2 >= 75 ? "warn" : "crit"]
+        ];
+        
+        $$("#hud .g").forEach((el, k) => {
+          el.dataset.s = vals[k][2]; 
+          el.querySelector("b").textContent = vals[k][0];
+          el.querySelector("i").style.setProperty("--p", clamp((vals[k][1] - G[k][2]) / (G[k][3] - G[k][2])));
+        });
+        
+        const s = STATUS[v.status] || "warn";
+        const b = $("st"); 
+        
+        b.textContent = v.status; 
+        b.style.setProperty("--c", COL[s]);
+      }
+      
+      const INTEL = [
+        ["objective", "🎯 Objective"], 
+        ["terrain", "⛰ Terrain"], 
+        ["sights", "👁 Sights"], 
+        ["dangers", "⚠ Dangers"], 
+        ["weather", "🌦 Weather"]
+      ];
+      
+      function drawIntel() {
+        const w = W[view];
+        const c = cur();
+        const locked = view > c;
+        
+        $("stop-t").textContent = w.type; 
+        $("stop-c").textContent = `${Math.abs(w.lat)}°${w.lat < 0 ? "S" : "N"} ${nl(w.lon).toFixed(3)}°E`;
+        
+        if (locked) {
+          $("intel").innerHTML = `<div class="intel"><b>🔒 Classified</b><p>Complete “${esc(label(W[c]))}” to unlock intel for this stop.</p></div>`;
+        } else {
+          $("intel").innerHTML = INTEL.map(([k, t]) => `
+            <div class="intel" data-k="${k}">
+              <b>${t}</b>
+              <p>${esc(w[k])}</p>
+            </div>
+          `).join("");
+        }
+        
+        drawHUD(locked ? W[c] || W[W.length - 1] : w);
+      }
+      
+      function stressNow() { 
+        const raw = ls("stress"); 
+        return raw === null || raw === "" ? null : +raw; 
+      }
+      
+      function drawAction() {
+        const c = cur();
+        const s = stressNow();
+        const stood = s !== null && s > 32;
+        const go = $("go");
+        const all = c >= W.length;
+        
+        $("crew").textContent = s === null ? "--" : `0${ls("crew") || 1} · ${s}/48`;
+        $("crew-st").dataset.s = s === null ? "" : s > 32 ? "crit" : s > 16 ? "warn" : "";
+        
+        const sd = $("stand"); 
+        sd.hidden = !(stood && !all);
+        
+        if (stood) {
+          sd.innerHTML = `Crew 0${esc(ls("crew") || 1)} is stood down (stress ${s}/48). Rest or switch crew in the <a href="weather.html">mind check</a> before the next stop.`;
+        }
+        
+        go.className = "go"; 
+        go.disabled = false;
+        
+        if (all) { 
+          go.textContent = "🏔 Summit reached · replay"; 
+          go.dataset.a = "reset"; 
+        } else if (view !== c) { 
+          go.textContent = "Go to current stop"; 
+          go.dataset.a = "cur"; 
+          go.classList.add("alt"); 
+        } else { 
+          go.textContent = `Complete stop (+${pts(W[c])} XP)`; 
+          go.dataset.a = "done"; 
+          go.disabled = stood; 
+        }
+        
+        $("reset").hidden = all;
+      }
+      
+      function drawStats() {
+        const x = xp(); 
+        $("xp").textContent = x; 
+        $("rank").textContent = RANKS.filter((r) => x >= r[0]).pop()[1];
+      }
+
+      /* ======================================================================
+         4. GLOBE INTEGRATION (mars-globe.js)
+         ====================================================================== */
+      function traces() {
+        const dl = { lat: [], lon: [] };
+        const pl = { lat: [], lon: [] };
+        const c = cur();
+        
+        for (let i = 0; i < W.length - 1; i++) {
+          const t = done.has(W[i].id) && done.has(W[i + 1].id) ? dl : pl;
+          t.lat.push(W[i].lat, W[i + 1].lat, null); 
+          t.lon.push(nl(W[i].lon), nl(W[i + 1].lon), null);
+        }
+        
+        const line = (t, color, dash) => ({ 
+          type: "scattergeo", 
+          mode: "lines", 
+          lat: t.lat, 
+          lon: t.lon, 
+          line: { width: 3, color, dash }, 
+          hoverinfo: "skip" 
+        });
+        
+        const col = (w, i) => (done.has(w.id) ? "#39ff88" : i === c ? "#ffb02e" : "#5b6f86");
+        
+        return [
+          line(dl, "#39ff88", "solid"), 
+          line(pl, "#5b6f86", "dot"), 
+          {
+            type: "scattergeo", 
+            mode: "markers+text", 
+            lat: W.map((w) => w.lat), 
+            lon: W.map((w) => nl(w.lon)),
+            text: W.map((w) => (isMain(w) ? short(w) : "")), 
+            textposition: "top right", 
+            textfont: { color: "#e8f5ff", size: 10 },
+            hovertext: W.map((w) => w.name), 
+            hoverinfo: "text",
+            marker: { 
+              size: W.map((w, i) => (i === c ? 18 : isMain(w) ? 13 : 8)), 
+              color: W.map(col), 
+              symbol: W.map((w) => (isMain(w) ? "diamond" : "circle")), 
+              line: { width: 1, color: "#fff" } 
+            }
+          }
+        ];
+      }
+      
+      const globe = () => window.MarsGlobe;
+      
+      function drawGlobe(fly) {
+        if (!globe()) return;
+        globe().setMission(traces());
+        if (fly) {
+          globe().flyTo(W[view].lat, W[view].lon, close ? 250 : 1);
+        }
+      }
+
+      function render(fly) {
+        drawLadder(); 
+        drawIntel(); 
+        drawAction(); 
+        drawStats(); 
+        drawGlobe(fly);
+        
+        // Sync live checkpoint data with localStorage for weather.html / vitals.js
+        const w = W[Math.min(cur(), W.length - 1)];
+        const v = w.vitals;               
+        
+        ls("wp", w.id); 
+        ls("hr", v.hr); 
+        ls("bp", v.bp); 
+        ls("temp", v.temp); 
+        ls("o2", v.o2); 
+        ls("status", v.status);
+      }
+
+      /* ======================================================================
+         5. EVENT LISTENERS
+         ====================================================================== */
+      $("ladder").addEventListener("click", (e) => {
+        const b = e.target.closest(".stop"); 
+        if (!b) return;
+        
+        const i = +b.dataset.i;
+        if (i > cur()) { 
+          toast("🔒 Locked · finish the stop before it"); 
+          return; 
+        }
+        
+        view = i; 
+        render(true);
+      });
+      
+      $("lm-list").addEventListener("click", (e) => {
+        const b = e.target.closest("[data-lm]"); 
+        if (!b) return;
+        
+        const l = LM[+b.dataset.lm];
+        const first = !found.has(l.name);
+        
+        found.add(l.name); 
+        save();
+        
+        $("lm-info").hidden = false; 
+        $("lm-info").innerHTML = `<b>${esc(l.name)}</b> · ${esc(l.type.split(",")[0])} · Ø ${l.diameterKm} km<br>${esc(l.origin)}`;
+        
+        switchTab("tab-3d"); 
+        
+        if (globe()) globe().flyTo(l.lat, l.lon, 2.2);
+        if (first) toast("🛰 Landmark logged · +10 XP");
+        
+        drawLadder(); 
+        drawStats();
+      });
+      
+      $("go").addEventListener("click", () => {
+        const a = $("go").dataset.a;
+        const c = cur();
+        
+        if (a === "cur") { 
+          view = Math.min(c, W.length - 1); 
+          render(true); 
+        }
+        else if (a === "reset") { 
+          done = new Set(); 
+          view = 0; 
+          save(); 
+          render(true); 
+        }
+        else if (a === "done") {
+          done.add(W[c].id); 
+          save();
+          
+          const n = cur();
+          const main = isMain(W[c]);
+          
+          view = Math.min(n, W.length - 1);
+          toast(n >= W.length ? "🏔 Summit reached · Mount Sharp ascent complete" : `${main ? "◆ Milestone" : "Stop"} cleared · +${pts(W[c])} XP`);
+          render(true);
+        }
+      });
+      
+      $("reset").addEventListener("click", () => { 
+        if (confirm("Restart the ascent? Landmark recon is kept.")) { 
+          done = new Set(); 
+          view = 0; 
+          save(); 
+          render(true); 
+        } 
+      });
+      
+      function setClose(on) { 
+        close = on; 
+        $("z-t").setAttribute("aria-pressed", on); 
+        $("z-g").setAttribute("aria-pressed", !on); 
+        if (globe()) globe().flyTo(W[view].lat, W[view].lon, on ? 250 : 1); 
+      }
+      
+      $("z-t").addEventListener("click", () => setClose(true)); 
+      $("z-g").addEventListener("click", () => setClose(false));
+
+      function switchTab(id) {
+        $$(".map-view").forEach((el) => el.classList.toggle("active", el.id === id));
+        $$(".tab-btn").forEach((b) => b.classList.toggle("active", b.dataset.tab === id));
+        if (id === "tab-3d" && window.Plotly) {
+          setTimeout(() => Plotly.Plots.resize("mars-globe"), 30);
+        }
+      }
+      
+      $$(".tab-btn").forEach((b) => b.addEventListener("click", () => switchTab(b.dataset.tab)));
+      
+      // Setup Pins on Static Maps (Offset matches map.js correction for MOLA black bars)
+      $$(".pin").forEach((p, k) => {                                              
+        const a = W[0];
+        const x = (nl(a.lon) + 180) / 360;
+        const yo = (90 - a.lat) / 180;
+        const ym = (549.2 - ((a.lat + 90) / 180) * 512) / 572;
+        
+        p.style.left = x * 100 + "%"; 
+        p.style.top = (k ? ym : yo) * 100 + "%";
+        p.addEventListener("click", () => { 
+          switchTab("tab-3d"); 
+          drawGlobe(true); 
+        });
+      });
+      
+      // Update UI if stress changes on the weather.html page
+      addEventListener("storage", (e) => { 
+        if (e.key && e.key.indexOf("ares1.") === 0) drawAction(); 
+      });
+
+      /* ======================================================================
+         6. INITIALIZATION
+         ====================================================================== */
+      view = Math.min(cur(), W.length - 1);
+      render(false);
+      
+      setTimeout(() => drawGlobe(true), 400);
+      
+    })();
+  </script>
+</body>
+</html>

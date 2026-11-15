@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ARES-1 // Mission Control</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Share+Tech+Mono&display=swap">
+<link rel="stylesheet" href="weather-game.css">
+</head>
+<body>
+
+<header class="top">
+  <div>
+    <h1>🔴 ARES-1 Habitat · Mission control</h1>
+    <p>Weather · Crew health · Threats · Survival guide</p>
+  </div>
+  <div class="top__right">
+    <span class="stat">Explored<b id="xp">0 / 5</b></span>
+    <span class="stat">Stress<b id="ms">--</b></span>
+    <span class="stat stat--clock">MTC<b id="clk">SOL-142 00:00:00</b></span>
+    <button class="btn" id="snd" type="button">🔊 Wind</button>
+    <a class="btn" href="orbital_maps.html">🛰 Orbital map</a>
+    <a class="btn" href="campaign.html">Back to campaign map</a>
+  </div>
+</header>
+<audio id="amb" src="martian_wind.mp3" loop preload="none"></audio>
+
+<div class="stage">
+
+  <!-- LEFT: where you are in the story -->
+  <aside class="left">
+    <div class="story" aria-live="polite">
+      <span class="av" aria-hidden="true">🛰</span>
+      <div><span class="ch" id="narr-ch">--</span><b id="narr-t">--</b><p id="narr">--</p></div>
+    </div>
+    <section class="box cps" id="cps" aria-label="Checkpoint">
+      <h3>Where are you?</h3>
+      <div class="cplist" id="cplist"></div>
+    </section>
+    <section class="box eva" aria-label="EVA route planner">
+      <h3>Plan an EVA route</h3>
+      <p class="lock" id="eva-lock" hidden></p>
+      <div id="globe-controls"></div>
+    </section>
+  </aside>
+
+  <!-- CENTRE: the globe, centred on the page -->
+  <div class="globe">
+    <div id="mars-globe" role="img" aria-label="3D globe of Mars with landmarks and your EVA route"></div>
+    <p class="globe__hint">Drag to rotate · cyan = landmarks · red = your EVA route · <a href="orbital_maps.html" style="color:var(--blue)">Open mission map</a></p>
+  </div>
+
+  <!-- RIGHT: one data card at a time -->
+  <main class="right" id="dash">
+
+    <!-- 1 · Weather -->
+    <section class="card" data-t="Weather" data-i="🌦">
+      <header class="card__head"><h2>🌦 Weather</h2><span class="tag" id="wx-tag">--</span></header>
+      <div class="tiles" id="wx"></div>
+      <figure class="chart"><figcaption><span>Daily high and low</span><em>°C · sols 142–148</em></figcaption>
+        <div class="chart__box" style="--h:170px"><canvas id="c-wx" role="img" aria-label="Temperature forecast"></canvas></div></figure>
+      <p class="hint" id="wx-sw"></p>
+      <div class="chips" id="wx-tips" aria-label="Suit settings today"></div>
+      <details class="more"><summary>See the 7-sol numbers</summary>
+        <div style="padding:0 12px 12px"><table class="dt" id="wx-tbl"></table></div></details>
+    </section>
+
+    <!-- 2 · Crew health (Body + Mind check questionnaire) -->
+    <section class="card" data-t="Health" data-i="❤️">
+      <header class="card__head"><h2>❤️ Crew health</h2><span class="tag" id="cp-tag">--</span></header>
+      <div class="tabs" id="hl-tabs" role="tablist" aria-label="Health views">
+        <button type="button" role="tab" data-tab="body" aria-selected="true">🫀 Body</button>
+        <button type="button" role="tab" data-tab="mind" aria-selected="false">🧠 Mind check</button>
+      </div>
+
+      <div class="stack" id="hl-body" role="tabpanel">
+        <div class="tiles tiles--2" id="vt"></div>
+        <figure class="chart"><figcaption><span>Heartbeat</span><em id="hrlbl">LIVE</em></figcaption>
+          <div class="chart__box" style="--h:72px"><canvas id="c-ecg" role="img" aria-label="Live heartbeat trace"></canvas></div></figure>
+        <button class="glance" id="glance" type="button" data-s="ok">
+          <span class="glance__face" id="g-face">😌</span>
+          <span><b id="g-s">Calm</b><small id="g-n">Mind score --</small></span>
+          <span class="glance__go">Open mind check ›</span>
+        </button>
+      </div>
+
+      <div class="stack" id="hl-mind" role="tabpanel" hidden>
+        <div class="crew" id="crew" role="group" aria-label="Crew member"></div>
+        <div class="stack" id="mind-box" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- 3 · Threats -->
+    <section class="card" data-t="Threats" data-i="⚠️">
+      <header class="card__head"><h2>⚠️ Threat levels</h2><span class="tag" id="thr-tag">--</span></header>
+      <p class="hint">Longer bar = more dangerous. Pick another checkpoint on the left to compare.</p>
+      <figure class="chart"><figcaption><span>Hazard score by type</span><em>0 – 100</em></figcaption>
+        <div class="chart__box" style="--h:200px"><canvas id="c-thr" role="img" aria-label="Threat bars"></canvas></div></figure>
+      <div class="legend"><span><i style="background:#39ff88"></i>Low (under 40)</span><span><i style="background:#ffb02e"></i>Medium (40–69)</span><span><i style="background:#ff3b57"></i>High (70+)</span></div>
+      <p class="tip" id="thr-tip"></p>
+      <figure class="chart"><figcaption><span>Oxygen along the route</span><em>% · CP-01 to CP-06</em></figcaption>
+        <div class="chart__box" style="--h:130px"><canvas id="c-route" role="img" aria-label="Oxygen per checkpoint"></canvas></div></figure>
+    </section>
+
+    <!-- 4 · Emergency -->
+    <section class="card" data-t="Emergency" data-i="🛟">
+      <header class="card__head"><h2>🛟 Emergency guide</h2><span class="tag" id="hz-n">--</span></header>
+      <div class="two">
+        <label class="lab">Group<select id="hz-cat" class="field"></select></label>
+        <label class="lab">Situation<select id="hz-sc" class="field"></select></label>
+      </div>
+      <article class="stack" id="hz-dos" aria-live="polite"></article>
+    </section>
+
+    <!-- 5 · Words -->
+    <section class="card" data-t="Words" data-i="📖">
+      <header class="card__head"><h2>📖 Mars words</h2><span class="tag" id="cx-n">--</span></header>
+      <input type="search" id="cx-q" class="field" placeholder="Search a word, e.g. regolith" aria-label="Search terms" autocomplete="off">
+      <div class="terms" id="terms"></div>
+    </section>
+  </main>
+
+  <div class="rail" id="rail" role="group" aria-label="Chapters"></div>
+  <nav class="nav" id="nav" aria-label="Story controls">
+    <button type="button" id="bk">‹ Back</button>
+    <button type="button" id="nx">Continue ›</button>
+  </nav>
+</div>
+
+<script src="chart.js"></script>
+<script>window.Chart||document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js"><\/script>')</script>
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script src="mars_data.js"></script>
+<script src="data-layer.js"></script>
+<script src="mars-globe.js"></script>
+<script src="weather-game.js"></script>
+</body>
+</html>

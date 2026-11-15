@@ -1,0 +1,1139 @@
+/* ==========================================================================
+   ARES-1 MISSION CONTROL — weather.css (Fluid, Tablet-First Dashboard)
+   ==========================================================================
+   Load order: weather.css → weather-panels.css
+   
+   Layout Structure:
+   - Natural page scroll, no locked heights.
+   - < 1100px  → 1 column: Q1 Globe → Q3 Briefing → Q2 Codex → Q4 Biometrics
+   - ≥ 1100px  → 2 columns: 1.4fr | 1fr [ Q1 Globe | Q2 Codex ] / [ Q3 Briefing | Q4 Biometrics ]
+   
+   Type Scale: 
+   - 16px body · 14px labels/captions/chips · 16px Orbitron titles · 32-40px Orbitron key numbers
+   
+   Touch Targets: 
+   - Every interactive control is at least --tap tall.
+   ========================================================================== */
+
+/* ==========================================================================
+   1. GLOBAL VARIABLES & BASE STYLES
+   ========================================================================== */
+:root {
+  --bg-0: #05080f; 
+  --bg-1: #0a111d; 
+  --bg-2: #101a2b; 
+  --line: #26405c;
+  --text: #e8f5ff; 
+  --dim: #a7c4dc;
+  
+  --green: #39ff88; 
+  --blue: #38d9ff; 
+  --amber: #ffb02e; 
+  --red: #ff3b57;
+  
+  --glow-b: 0 0 6px rgba(56, 217, 255, .55), 0 0 18px rgba(56, 217, 255, .22);
+  --glow-g: 0 0 6px rgba(57, 255, 136, .6), 0 0 18px rgba(57, 255, 136, .28);
+  
+  --head: "Orbitron", "Rajdhani", "Segoe UI", sans-serif;
+  --mono: "Share Tech Mono", "Consolas", "Menlo", monospace;
+  
+  --pad: 24px;      /* Padding inside each card */
+  --gap: 24px;      /* Gap between cards */
+  --tap: 36px;      /* Control height: sleek, consistent with index.html */
+}
+
+@media (pointer: coarse) { 
+  :root { --tap: 40px; } 
+} /* Touch screens: slightly taller for ease of tapping, still refined */
+
+* { 
+  box-sizing: border-box; 
+}
+
+[hidden] { 
+  display: none !important; 
+}
+
+html { 
+  background: var(--bg-0); 
+  -webkit-text-size-adjust: 100%; 
+}
+
+@media (prefers-reduced-motion: no-preference) { 
+  html { scroll-behavior: smooth; } 
+}
+
+body {
+  margin: 0; 
+  min-height: 100vh; 
+  color: var(--text); 
+  font: 16px/1.55 var(--mono);
+  background:
+    linear-gradient(rgba(56, 217, 255, .035) 1px, transparent 1px) 0 0 / 48px 48px,
+    linear-gradient(90deg, rgba(56, 217, 255, .035) 1px, transparent 1px) 0 0 / 48px 48px,
+    radial-gradient(1100px 520px at 80% -10%, rgba(232, 163, 92, .12), transparent 60%),
+    radial-gradient(900px 500px at 0% 110%, rgba(56, 217, 255, .08), transparent 60%), 
+    var(--bg-0);
+}
+
+/* CRT Scanlines Overlay */
+body::after { 
+  content: ""; 
+  position: fixed; 
+  inset: 0; 
+  pointer-events: none; 
+  z-index: 50;
+  background: repeating-linear-gradient(0deg, rgba(255, 255, 255, .02) 0 1px, transparent 1px 3px); 
+}
+
+/* Optional Visor Vignette */
+html::before { 
+  content: ""; 
+  position: fixed; 
+  inset: 0; 
+  z-index: 49; 
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 62%, rgba(0, 0, 0, .42) 100%); 
+}
+
+a { 
+  color: inherit; 
+}
+
+small { 
+  font-size: 12px; 
+}
+
+:focus-visible { 
+  outline: 2px solid var(--blue); 
+  outline-offset: 2px; 
+}
+
+/* ==========================================================================
+   2. NEON SCROLLBARS
+   ========================================================================== */
+:is(html, .dict__grid) { 
+  scrollbar-width: auto; 
+  scrollbar-color: auto; 
+}
+
+:is(html, .dict__grid)::-webkit-scrollbar { 
+  width: 12px; 
+  height: 12px; 
+}
+
+.dict__grid::-webkit-scrollbar { 
+  width: 10px; 
+}
+
+:is(html, .dict__grid)::-webkit-scrollbar-track { 
+  background: #05080f; 
+  border-left: 1px solid rgba(56, 217, 255, .18); 
+}
+
+:is(html, .dict__grid)::-webkit-scrollbar-thumb { 
+  background: linear-gradient(180deg, #38d9ff, #39ff88); 
+  border-radius: 6px;
+  border: 2px solid #05080f; 
+  box-shadow: inset 0 0 3px rgba(255, 255, 255, .55), 0 0 8px #38d9ff; 
+}
+
+:is(html, .dict__grid)::-webkit-scrollbar-thumb:hover { 
+  background: linear-gradient(180deg, #39ff88, #ffb02e); 
+}
+
+:is(html, .dict__grid)::-webkit-scrollbar-corner { 
+  background: #05080f; 
+}
+
+@supports (-moz-appearance: none) { 
+  :is(html, .dict__grid) { 
+    scrollbar-width: thin; 
+    scrollbar-color: #38d9ff #05080f; 
+  } 
+}
+
+/* ==========================================================================
+   3. HEADER NAVIGATION BAR
+   ========================================================================== */
+.top { 
+  position: relative; 
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between; 
+  gap: var(--gap); 
+  flex-wrap: wrap;
+  padding: 14px 24px; 
+  background: linear-gradient(180deg, #0e1727, #09101b); 
+  border-bottom: 1px solid var(--line); 
+}
+
+.top::after { 
+  content: ""; 
+  position: absolute; 
+  left: 0; 
+  right: 0; 
+  bottom: -1px; 
+  height: 2px; 
+  opacity: .75;
+  background: linear-gradient(90deg, var(--blue), transparent 40%, transparent 60%, var(--green)); 
+}
+
+h1, .card > h2 { 
+  margin: 0; 
+  font: 700 14px/1.5 var(--head); 
+  letter-spacing: .16em; 
+  text-transform: uppercase; 
+  color: var(--green); 
+  text-shadow: var(--glow-g); 
+}
+
+.top__sub { 
+  margin-top: 2px; 
+  font-size: 12px; 
+  letter-spacing: .08em; 
+  color: var(--dim); 
+}
+
+.top__right { 
+  display: flex; 
+  align-items: center; 
+  gap: var(--gap); 
+  flex-wrap: wrap; 
+}
+
+.uplink { 
+  min-width: 200px; 
+  font-size: 12px; 
+  letter-spacing: .08em; 
+  color: var(--green); 
+  text-shadow: var(--glow-g); 
+}
+
+.uplink b { 
+  font-weight: 400; 
+  animation: blink .7s steps(1) infinite; 
+}
+
+.clock { 
+  font: 700 14px var(--head); 
+  letter-spacing: .12em; 
+  color: var(--amber); 
+}
+
+.back { 
+  display: inline-flex; 
+  align-items: center; 
+  min-height: var(--tap); 
+  padding: 0 14px; 
+  font: 700 12px var(--head); 
+  letter-spacing: .14em; 
+  text-decoration: none; 
+  color: var(--blue); 
+  border: 1px solid var(--blue); 
+  transition: .15s; 
+}
+
+.back:hover, .back:active { 
+  background: rgba(56, 217, 255, .18); 
+  color: #fff; 
+  box-shadow: var(--glow-b); 
+}
+
+/* ==========================================================================
+   4. THE GRID MATRIX LAYOUT
+   ========================================================================== */
+.matrix {
+  display: grid; 
+  gap: var(--gap); 
+  padding: var(--gap); 
+  align-items: stretch; 
+  max-width: 1920px; 
+  margin: 0 auto;
+  grid-template-columns: minmax(0, 1fr); /* minmax(0,...) prevents content overflow */
+  grid-template-areas: "model" "viz" "ops" "dict" "psy"; /* Portrait reading order */
+}
+
+.model { grid-area: model; } 
+.dict { grid-area: dict; } 
+.ops { grid-area: ops; } 
+.psy { grid-area: psy; } 
+.viz { grid-area: viz; }
+
+@media (min-width: 1100px) { /* Landscape desktop / large tablets */
+  .matrix { 
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); 
+    grid-template-areas: "model dict" "viz viz" "ops psy"; 
+  }
+}
+
+@media (max-width: 640px) { /* Compact mobile layout */
+  :root { --pad: 18px; --gap: 16px; }
+  .top { padding: 12px 16px; }
+}
+
+/* ==========================================================================
+   5. CARD SHELL & PANEL COMPONENTS
+   ========================================================================== */
+.card {
+  position: relative; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 20px; 
+  min-width: 0; 
+  height: auto; 
+  padding: var(--pad);
+  overflow: hidden; 
+  container-type: inline-size;
+  background: linear-gradient(160deg, var(--bg-2), var(--bg-1)); 
+  border: 1px solid rgba(56, 217, 255, .4);
+  box-shadow: inset 0 0 26px rgba(56, 217, 255, .05), 0 0 14px rgba(56, 217, 255, .12);
+}
+
+/* Corner Brackets */
+.card::before, .card::after { 
+  content: ""; 
+  position: absolute; 
+  width: 14px; 
+  height: 14px; 
+  pointer-events: none; 
+  border: 2px solid var(--green); 
+  filter: drop-shadow(0 0 4px var(--green)); 
+}
+.card::before { top: 0; left: 0; border-right: 0; border-bottom: 0; }
+.card::after  { bottom: 0; right: 0; border-left: 0; border-top: 0; }
+
+.card > h2 { 
+  flex: none; 
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between; 
+  flex-wrap: wrap; 
+  gap: 6px 12px; 
+  padding-bottom: 14px; 
+  border-bottom: 1px solid var(--line); 
+}
+
+.h2__t { 
+  display: inline-flex; 
+  align-items: center; 
+  gap: 10px; 
+}
+
+.q { 
+  padding: 4px 6px; 
+  font: 700 12px/1 var(--head); 
+  font-style: normal; 
+  letter-spacing: .04em; 
+  color: var(--bg-0); 
+  background: var(--green); 
+  text-shadow: none; 
+  box-shadow: var(--glow-g); 
+}
+
+.card > h2 em { 
+  font: normal 12px/1.5 var(--mono); 
+  letter-spacing: .06em; 
+  color: var(--dim); 
+  text-shadow: none; 
+}
+
+.tag { 
+  padding: 1px 8px; 
+  border: 1px solid var(--amber); 
+  color: var(--amber) !important; 
+}
+
+.tag::before { 
+  content: "● "; 
+  animation: blink 1.4s infinite; 
+}
+
+/* ==========================================================================
+   6. CONTROLS & FORM INPUTS
+   ========================================================================== */
+.card .label { 
+  font-size: 12px; 
+}
+
+.card :is(.readout, .seq li, .caption, .banner.status, .psy__advice, .psy__recovery, .intel, .dict details p) { 
+  font-size: 15px; 
+  line-height: 1.6; 
+}
+
+.card .chips { 
+  gap: 8px; 
+}
+
+/* Inputs & Select Fields */
+.card :is(.field, select, input:not([type=range]):not([type=radio]):not([type=checkbox])) { 
+  min-height: var(--tap); 
+  padding: 6px 12px; 
+  font-size: 14px; 
+}
+
+.card select.field, .card select { 
+  padding-right: 36px; 
+}
+
+.card :is(.field, select, input):focus-visible { 
+  outline: 2px solid var(--blue); 
+  outline-offset: 1px; 
+  box-shadow: var(--glow-b); 
+}
+
+@supports (-webkit-touch-callout: none) { 
+  .card :is(.field, select, input:not([type=range]):not([type=radio]):not([type=checkbox])) { 
+    font-size: 16px; 
+  } 
+} /* Prevent iOS zoom-on-focus */
+
+.card :is(input[type=radio], input[type=checkbox]) { 
+  width: 20px; 
+  height: 20px; 
+  accent-color: var(--blue); 
+  flex: none; 
+}
+
+.card #globe-controls label { 
+  display: flex; 
+  align-items: center; 
+  gap: 8px; 
+  min-height: var(--tap); 
+}
+
+/* Chips */
+.card .chip { 
+  display: inline-flex; 
+  align-items: center; 
+  gap: 6px; 
+  min-height: var(--tap); 
+  padding: 4px 12px; 
+  font-size: 12px; 
+  letter-spacing: .04em; 
+}
+
+/* Dictionary Summary Rows */
+.card .dict summary { 
+  min-height: var(--tap); 
+  padding: 8px 14px; 
+  align-items: center; 
+  font-size: 14px; 
+  -webkit-tap-highlight-color: transparent; 
+}
+
+.card .dict summary::after { 
+  font-size: 14px; 
+}
+
+.card .dict details p { 
+  padding: 12px 14px 14px; 
+}
+
+/* Range Sliders */
+.card input[type=range] { 
+  -webkit-appearance: none; 
+  appearance: none; 
+  width: 100%; 
+  height: var(--tap); 
+  margin: 0; 
+  background: transparent; 
+  cursor: pointer; 
+  touch-action: pan-y; 
+}
+
+.card input[type=range]::-webkit-slider-runnable-track { 
+  height: 6px; 
+  border-radius: 3px; 
+  background: linear-gradient(90deg, rgba(56, 217, 255, .55), rgba(57, 255, 136, .55)); 
+  box-shadow: inset 0 0 0 1px var(--line); 
+}
+
+.card input[type=range]::-webkit-slider-thumb { 
+  -webkit-appearance: none; 
+  width: 22px; 
+  height: 22px; 
+  margin-top: -8px; 
+  border-radius: 50%; 
+  background: var(--bg-0); 
+  border: 2px solid var(--blue); 
+  box-shadow: var(--glow-b); 
+}
+
+.card input[type=range]::-moz-range-track { 
+  height: 6px; 
+  border-radius: 3px; 
+  background: linear-gradient(90deg, rgba(56, 217, 255, .55), rgba(57, 255, 136, .55)); 
+  box-shadow: inset 0 0 0 1px var(--line); 
+}
+
+.card input[type=range]::-moz-range-thumb { 
+  width: 18px; 
+  height: 18px; 
+  border-radius: 50%; 
+  background: var(--bg-0); 
+  border: 2px solid var(--blue); 
+  box-shadow: var(--glow-b); 
+}
+
+.card input[type=range]:active::-webkit-slider-thumb { 
+  background: var(--blue); 
+}
+
+.card input[type=range]:active::-moz-range-thumb { 
+  background: var(--blue); 
+}
+
+/* ==========================================================================
+   7. Q1: NAVIGATION GLOBE
+   ========================================================================== */
+.model #globe-controls { 
+  flex: none; 
+  display: grid; 
+  gap: 14px 18px; 
+  align-items: end; 
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); 
+}
+
+.model #mars-globe { 
+  flex: none; 
+  width: 100%; 
+  height: clamp(380px, 56vh, 620px); 
+  overflow: hidden; 
+  border: 1px solid rgba(56, 217, 255, .3); 
+  background: radial-gradient(circle at 50% 50%, rgba(56, 217, 255, .07), transparent 65%), var(--bg-0); 
+}
+
+@media (max-width: 640px) { 
+  .model #mars-globe { height: 360px; } 
+}
+
+/* ==========================================================================
+   8. Q2: CODEX (Survival Dictionary)
+   ========================================================================== */
+.dict__bar { 
+  flex: none; 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+}
+
+.dict__bar .label { 
+  flex: none; 
+  color: var(--blue); 
+}
+
+.dict__bar .field { 
+  flex: 1; 
+}
+
+.dict__grid { 
+  flex: 0 1 auto; 
+  max-height: clamp(380px, 62vh, 640px); 
+  align-content: start; 
+  counter-reset: d; 
+  gap: 12px; 
+  padding-right: 8px; 
+}
+
+.dict details { 
+  counter-increment: d; 
+}
+
+.dict summary::before { 
+  content: counter(d, decimal-leading-zero); 
+  flex: none; 
+  color: var(--blue); 
+  font-family: var(--head); 
+  font-size: 14px; 
+  text-shadow: var(--glow-b); 
+}
+
+.dict details[open] summary::before { 
+  color: var(--green); 
+}
+
+.dict summary:hover, .dict summary:active { 
+  background: rgba(57, 255, 136, .06); 
+}
+
+@media (max-width: 640px) { 
+  .dict__bar { 
+    flex-direction: column; 
+    align-items: stretch; 
+    gap: 6px; 
+  } 
+}
+
+/* ==========================================================================
+   9. Q3: MISSION BRIEFING & HAZARDS
+   ========================================================================== */
+.ops .ops__grid { 
+  flex: 1 1 auto; 
+  display: grid; 
+  grid-template-columns: minmax(300px, 1fr) minmax(0, 1.3fr); 
+  gap: 28px; 
+  align-items: start; 
+}
+
+/* Left Picker Column */
+.ops .ops__pick { 
+  display: grid; 
+  align-content: start; 
+  gap: 22px; 
+  min-width: 0; 
+}
+
+.ops .pick-step { 
+  display: grid; 
+  gap: 10px; 
+  min-width: 0; 
+}
+
+.ops .pick-step > .label { 
+  font: 12px/1.5 var(--mono); 
+  letter-spacing: .1em; 
+  color: var(--blue); 
+}
+
+.ops .ops__pick :is(select, .field) { 
+  width: 100%; 
+}
+
+.ops .chips { 
+  display: grid; 
+  grid-template-columns: minmax(0, 1fr); 
+  gap: 6px; 
+}
+
+.ops .chip { 
+  width: 100%; 
+  justify-content: space-between; 
+  text-align: left; 
+  white-space: normal; 
+}
+
+.ops .chip em { 
+  flex: none; 
+  margin-left: auto; 
+  padding-left: 10px; 
+}
+
+.ops .banner.status { 
+  display: grid; 
+  gap: 4px; 
+  margin: 0; 
+  padding: 12px 14px; 
+  border: 1px solid var(--c); 
+  border-left-width: 3px; 
+  background: color-mix(in srgb, var(--c) 10%, transparent); 
+}
+
+.ops .banner.status b { 
+  font: 700 12px var(--head); 
+  letter-spacing: .16em; 
+  color: var(--c); 
+}
+
+.ops .banner.status span { 
+  font-size: 14px; 
+  line-height: 1.5; 
+  color: var(--dim); 
+}
+
+/* Right Dossier Panel */
+.ops .dossier { 
+  --c: var(--blue); 
+  display: grid; 
+  align-content: start; 
+  gap: 22px; 
+  min-width: 0; 
+  padding: 2px 0 2px 28px; 
+  border-left: 3px solid var(--c); 
+}
+
+.ops .dossier:has(#ops-sev[data-sev="critical"]) { --c: var(--red); }
+.ops .dossier:has(#ops-sev[data-sev="warning"]) { --c: var(--amber); }
+.ops .dossier:has(#ops-sev[data-sev="moderate"]) { --c: var(--green); }
+
+.ops .dossier > div { 
+  display: grid; 
+  gap: 10px; 
+}
+
+.ops .dossier__head { 
+  align-items: flex-start; 
+  gap: 16px; 
+}
+
+.ops .dossier h3 { 
+  font-size: 17px; 
+  line-height: 1.4; 
+  letter-spacing: .04em; 
+}
+
+.ops #ops-sector { 
+  margin-top: 4px; 
+  font-size: 14px; 
+}
+
+.ops .dossier .label { 
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  font: 700 12px/1.5 var(--head); 
+  letter-spacing: .16em; 
+  color: var(--blue); 
+}
+
+.ops .dossier .label::before { 
+  content: "◆"; 
+  color: var(--c); 
+}
+
+.ops .dossier .label::after { 
+  content: ""; 
+  flex: 1; 
+  height: 1px; 
+  background: linear-gradient(90deg, var(--line), transparent); 
+}
+
+.ops .readout { 
+  padding: 14px 16px; 
+}
+
+.ops .seq { 
+  gap: 10px; 
+}
+
+.ops .seq li { 
+  grid-template-columns: 36px minmax(0, 1fr); 
+  gap: 14px; 
+  align-items: start; 
+  padding: 12px 16px 12px 12px; 
+  font-size: 15px; 
+  line-height: 1.55; 
+  border-left: 2px solid rgba(57, 255, 136, .5); 
+}
+
+.ops .seq li::before { 
+  content: counter(s, decimal-leading-zero); 
+  height: 28px; 
+  font: 700 13px var(--head); 
+  letter-spacing: .04em; 
+}
+
+@container (max-width: 760px) {
+  .ops .ops__grid { 
+    grid-template-columns: minmax(0, 1fr); 
+    gap: 24px; 
+  }
+  .ops .chips { 
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); 
+  }
+  .ops .dossier { 
+    padding: 20px 0 0; 
+    border-left: 0; 
+    border-top: 3px solid var(--c); 
+  }
+}
+
+/* ==========================================================================
+   10. Q4: BIOMETRICS & TELEMETRY DASHBOARD
+   ========================================================================== */
+.psy .hud { 
+  flex: 1 1 auto; 
+  display: grid; 
+  gap: 24px; 
+  align-items: start; 
+  grid-template-columns: minmax(0, 1fr); 
+}
+
+.vitals { 
+  --c: var(--green); 
+  display: grid; 
+  gap: 12px; 
+  min-width: 0; 
+}
+
+.vital { 
+  --c: var(--green); 
+  display: grid; 
+  grid-template-columns: minmax(0, 1fr) auto; 
+  align-items: center; 
+  gap: 4px 12px; 
+  padding: 14px 16px 16px; 
+  min-width: 0;
+  background: rgba(255, 255, 255, .03); 
+  border: 1px solid var(--line); 
+  border-left: 3px solid var(--c); 
+  transition: border-color .2s; 
+}
+
+.vital[data-state="warn"] { --c: var(--amber); }
+.vital[data-state="crit"] { --c: var(--red); }
+
+.vital__id { 
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  min-width: 0; 
+}
+
+.vital__ico { 
+  position: relative; 
+  flex: none; 
+  display: grid; 
+  place-items: center; 
+  width: 26px; 
+  height: 26px; 
+  font: 700 16px/1 var(--head); 
+  color: var(--c); 
+  text-shadow: 0 0 8px var(--c); 
+}
+
+.vital__st { 
+  font: 700 14px/1.5 var(--head); 
+  letter-spacing: .08em; 
+  color: var(--c); 
+}
+
+.vital[data-state="crit"] .vital__st { 
+  animation: blink .8s infinite; 
+}
+
+.vital__val { 
+  grid-column: 1 / -1; 
+  display: flex; 
+  align-items: baseline; 
+  flex-wrap: wrap; 
+  gap: 0 10px; 
+}
+
+.vital__val b { 
+  font: 700 36px/1.15 var(--head); 
+  color: #fff; 
+  text-shadow: 0 0 10px color-mix(in srgb, var(--c) 60%, transparent); 
+}
+
+.vital__val small { 
+  color: var(--dim); 
+}
+
+.vital__val .rng { 
+  margin-left: auto; 
+  font-size: 14px; 
+  color: var(--dim); 
+}
+
+.vital__gauge { 
+  grid-column: 1 / -1; 
+  position: relative; 
+  height: 10px; 
+  margin-top: 6px; 
+  border: 1px solid var(--line);
+  background: linear-gradient(90deg, transparent calc(var(--b0) * 100%), rgba(57, 255, 136, .28) 0 calc(var(--b1) * 100%), transparent 0), var(--bg-0); 
+}
+
+.vital__gauge i { 
+  position: absolute; 
+  top: 50%; 
+  left: calc(var(--p) * 100%); 
+  width: 16px; 
+  height: 16px; 
+  margin: -8px 0 0 -8px; 
+  border-radius: 50%;
+  background: #fff; 
+  border: 3px solid var(--bg-0); 
+  box-shadow: 0 0 0 1px var(--c), 0 0 10px var(--c); 
+  transition: left .4s; 
+}
+
+.heart { 
+  width: 24px; 
+  height: 24px; 
+  fill: var(--c); 
+  filter: drop-shadow(0 0 6px var(--c)); 
+  transform-origin: 50% 55%; 
+  animation: heartbeat var(--beat, .8s) ease-in-out infinite; 
+}
+
+.vital__ico--hr::after { 
+  content: ""; 
+  position: absolute; 
+  inset: 1px; 
+  border-radius: 50%; 
+  border: 1.5px solid var(--c); 
+  opacity: 0; 
+  animation: ripple var(--beat, .8s) ease-out infinite; 
+}
+
+@keyframes heartbeat { 
+  0%, 100% { transform: scale(1); } 
+  14% { transform: scale(1.28); } 
+  28% { transform: scale(1); } 
+  42% { transform: scale(1.18); } 
+  70% { transform: scale(1); } 
+}
+
+@keyframes ripple { 
+  0% { transform: scale(.7); opacity: .8; } 
+  70%, 100% { transform: scale(2.1); opacity: 0; } 
+}
+
+.vitals__ecg.ecg { 
+  height: 40px; 
+}
+
+.vitals__note { 
+  margin: 0; 
+  font-size: 14px; 
+  line-height: 1.5; 
+  letter-spacing: .04em; 
+  color: var(--amber); 
+}
+
+.vitals__note::before { 
+  content: "● "; 
+  animation: blink 1.4s infinite; 
+}
+
+/* Telemetry Dashboard Visualizations */
+.viz .vitals { 
+  gap: 18px; 
+}
+
+.vread { 
+  display: flex; 
+  flex-wrap: wrap; 
+  gap: 4px 18px; 
+  margin: 0; 
+  color: var(--dim); 
+}
+
+.vread > span { --c: var(--green); }
+.vread > span[data-state="warn"] { --c: var(--amber); }
+.vread > span[data-state="crit"] { --c: var(--red); }
+
+.vread b { 
+  font: 700 16px/1.5 var(--head); 
+  color: var(--c); 
+  text-shadow: 0 0 8px color-mix(in srgb, var(--c) 70%, transparent); 
+}
+
+.viz__grid { 
+  display: grid; 
+  gap: 16px; 
+  grid-template-columns: minmax(0, 1fr); 
+}
+
+@container (min-width: 760px) { 
+  .viz__grid { grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr); } 
+}
+
+/* Holographic Scanner Panels */
+.chart { 
+  margin: 0; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 10px; 
+  min-width: 0; 
+  padding: 14px 16px 16px;
+  background: radial-gradient(420px 220px at 50% 45%, rgba(56, 217, 255, .07), transparent 72%); 
+  border: 1px solid rgba(56, 217, 255, .28); 
+  box-shadow: inset 0 0 22px rgba(56, 217, 255, .05); 
+}
+
+.chart figcaption { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: baseline; 
+  flex-wrap: wrap; 
+  gap: 2px 10px; 
+}
+
+.chart figcaption em { 
+  font-style: normal; 
+  font-size: 12px; 
+  letter-spacing: .06em; 
+  color: var(--blue); 
+}
+
+.chart__box { 
+  position: relative; 
+  flex: 1 1 auto; 
+  min-width: 0; 
+  height: 300px; 
+}
+
+.chart__box canvas { 
+  display: block; 
+}
+
+.chart__center { 
+  position: absolute; 
+  inset: 0; 
+  display: grid; 
+  place-content: center; 
+  gap: 2px; 
+  text-align: center; 
+  pointer-events: none; 
+}
+
+.chart__center b { 
+  font: 700 40px/1.1 var(--head); 
+  color: #fff; 
+  text-shadow: 0 0 12px rgba(255, 255, 255, .35); 
+}
+
+.chart__center small { 
+  margin-left: 4px; 
+  color: var(--dim); 
+}
+
+.chart__state { 
+  font: 700 12px/1.5 var(--head); 
+  letter-spacing: .14em; 
+}
+
+.viz__foot { 
+  margin: 0; 
+  padding-top: 14px; 
+  text-align: center; 
+  font: 700 12px/1.5 var(--head); 
+  letter-spacing: .2em; 
+  color: var(--blue); 
+  text-shadow: var(--glow-b); 
+  border-top: 1px solid var(--line); 
+}
+
+/* Oxygen Reserve Tank */
+.vital--o2 { 
+  border-left-width: 4px; 
+  background: linear-gradient(90deg, color-mix(in srgb, var(--c) 12%, transparent), rgba(255, 255, 255, .03) 65%); 
+  box-shadow: inset 0 0 22px color-mix(in srgb, var(--c) 10%, transparent); 
+}
+
+.vital__ico--o2 { 
+  font-size: 14px; 
+}
+
+.vital__ico--o2 sub { 
+  position: relative; 
+  top: 4px; 
+  font-size: 9px; 
+  line-height: 1; 
+  vertical-align: baseline; 
+}
+
+.vital--o2[data-state="warn"] .vital__st::before { 
+  content: "\25BC  "; 
+}
+
+.vital__tank { 
+  grid-column: 1 / -1; 
+  position: relative; 
+  height: 18px; 
+  margin-top: 6px; 
+  overflow: hidden; 
+  border: 1px solid var(--line); 
+  background: var(--bg-0); 
+}
+
+.vital__tank i { 
+  position: absolute; 
+  top: 2px; 
+  bottom: 2px; 
+  left: 2px; 
+  width: calc(var(--p) * (100% - 4px)); 
+  transition: width .4s;
+  background: repeating-linear-gradient(90deg, var(--c) 0 8px, transparent 8px 11px); 
+  box-shadow: 0 0 10px var(--c); 
+}
+
+.vital__tank::after { 
+  content: ""; 
+  position: absolute; 
+  top: 0; 
+  bottom: 0; 
+  left: calc(2px + var(--b1, .95) * (100% - 4px)); 
+  width: 2px; 
+  background: var(--green); 
+  box-shadow: var(--glow-g); 
+} /* Nominal >95% line */
+
+.vital--o2[data-state="warn"] .vital__tank i { 
+  animation: tank-pulse 1.6s ease-in-out infinite; 
+}
+
+.vital--o2[data-state="crit"] .vital__tank i { 
+  animation: tank-pulse .8s ease-in-out infinite; 
+}
+
+@keyframes tank-pulse { 
+  50% { opacity: .55; } 
+}
+
+/* Telemetry Status Strip */
+.vitals__status { 
+  --c: var(--green); 
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between; 
+  gap: 12px; 
+  padding: 10px 16px;
+  border: 1px solid var(--c); 
+  border-left-width: 4px; 
+  background: color-mix(in srgb, var(--c) 10%, transparent); 
+}
+
+.vitals__status[data-level="warn"] { --c: var(--amber); }
+.vitals__status[data-level="crit"] { --c: var(--red); }
+
+.vitals__status b { 
+  font: 700 14px/1.5 var(--head); 
+  letter-spacing: .1em; 
+  color: var(--c); 
+  text-shadow: 0 0 8px color-mix(in srgb, var(--c) 60%, transparent); 
+}
+
+.vitals__status[data-level="crit"] b { 
+  animation: blink .8s infinite; 
+}
+
+.psych { 
+  min-width: 0; 
+  display: grid; 
+  gap: 16px; 
+}
+
+.psych__head { 
+  padding-bottom: 10px; 
+  border-bottom: 1px solid var(--line); 
+  color: var(--blue); 
+}
+
+.psy .hud #psych-widget { 
+  display: block; 
+  columns: 2 300px; 
+  column-gap: 28px; 
+}
+
+.psy .hud #psych-widget > * { 
+  break-inside: avoid; 
+  margin: 0 0 16px; 
+}
+
+/* ==========================================================================
+   11. ANIMATIONS
+   ========================================================================== */
+@keyframes blink { 
+  50% { opacity: .3; } 
+}
+
+@media (prefers-reduced-motion: reduce) { 
+  * { 
+    animation: none !important; 
+    transition: none !important; 
+  } 
+}

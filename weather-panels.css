@@ -1,0 +1,462 @@
+/* ==========================================================================
+   WEATHER PANELS EXTENSION (weather-panels.css)
+   ==========================================================================
+   Load AFTER weather.css.
+   Uses only weather.css tokens: 
+   --bg-*, --line, --blue, --green, --amber, --red, --dim, --head, --mono
+   and its type scale (14px / 12px / 40px).
+   
+   NOTE: Grid layout, quadrant heights, and scroll areas live in weather.css.
+   ========================================================================== */
+
+/* ==========================================================================
+   1. MISSING BASE CLASSES
+   ========================================================================== */
+/* These are required because this page uses the slim version of weather.css */
+
+.label { 
+  font: 12px/1.5 var(--mono); 
+  letter-spacing: .14em; 
+  color: var(--dim); 
+  text-transform: uppercase; 
+}
+
+.caption { 
+  margin: 0; 
+  font-size: 14px; 
+  line-height: 1.5; 
+  color: var(--text); 
+}
+
+.caption--dim { 
+  color: var(--dim); 
+}
+
+.empty { 
+  margin: 0; 
+  color: var(--dim); 
+  font-size: 14px; 
+}
+
+/* ==========================================================================
+   2. SHARED FORM COMPONENTS
+   ========================================================================== */
+.field { 
+  width: 100%; 
+  padding: 9px 12px; 
+  font: 14px/1.5 var(--mono); 
+  color: var(--text); 
+  color-scheme: dark;
+  background: var(--bg-0); 
+  border: 1px solid var(--blue); 
+  border-radius: 0; 
+  appearance: none; 
+}
+
+select.field { 
+  padding-right: 36px; 
+  cursor: pointer;
+  background: var(--bg-0) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2338d9ff' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 12px center; 
+}
+
+.field:focus-visible, 
+.chip:focus-visible, 
+.dict summary:focus-visible { 
+  outline: 2px solid var(--blue); 
+  outline-offset: 1px; 
+  box-shadow: var(--glow-b); 
+}
+
+.field option { 
+  background: var(--bg-1); 
+  color: var(--text); 
+}
+
+/* Interactive Chips */
+.chips { 
+  display: flex; 
+  flex-wrap: wrap; 
+  gap: 8px; 
+}
+
+.chip { 
+  padding: 6px 12px; 
+  font: 12px/1.5 var(--mono); 
+  letter-spacing: .06em; 
+  color: var(--text); 
+  background: transparent; 
+  border: 1px solid var(--line); 
+  cursor: pointer; 
+  transition: .15s; 
+}
+
+.chip em { 
+  margin-left: 6px; 
+  font-style: normal; 
+  color: var(--dim); 
+}
+
+.chip:hover { 
+  border-color: var(--blue); 
+  color: var(--blue); 
+}
+
+.chip.is-active { 
+  border-color: var(--green); 
+  color: var(--green); 
+  background: rgba(57, 255, 136, .08); 
+  box-shadow: var(--glow-g); 
+}
+
+/* Severity Badges */
+.badge { 
+  flex: none; 
+  padding: 2px 10px; 
+  font: 700 12px/1.5 var(--head); 
+  letter-spacing: .14em; 
+  color: var(--c); 
+  border: 1px solid var(--c); 
+  box-shadow: 0 0 10px color-mix(in srgb, var(--c) 45%, transparent); 
+}
+
+[data-sev] { --c: var(--blue); }
+[data-sev="moderate"], [data-sev="notice"] { --c: var(--green); }
+[data-sev="warning"] { --c: var(--amber); }
+[data-sev="critical"] { --c: var(--red); }
+
+/* ==========================================================================
+   3. SCENARIO SELECTOR & DOSSIER (Quadrant 3)
+   ========================================================================== */
+.ops__grid { 
+  display: grid; 
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr); 
+  gap: calc(var(--gap) * 1.5); 
+  align-items: stretch; 
+}
+
+.ops__pick { 
+  display: grid; 
+  align-content: space-between; 
+  gap: 20px; 
+}
+
+.pick-step { 
+  display: grid; 
+  gap: 8px; 
+}
+
+.banner.status { 
+  margin: 0; 
+  border-color: var(--c); 
+  background: color-mix(in srgb, var(--c) 10%, transparent); 
+}
+
+.banner.status b { 
+  color: var(--c); 
+}
+
+/* Dossier Document Styling */
+.dossier { 
+  display: grid; 
+  align-content: space-between; 
+  gap: 18px; 
+  min-width: 0; 
+  padding-left: calc(var(--gap) * 1.5); 
+  border-left: 1px solid var(--line); 
+}
+
+.dossier > div { 
+  display: grid; 
+  gap: 8px; 
+}
+
+.dossier.flash { 
+  animation: dossier-in .35s ease-out; 
+}
+
+.dossier__head { 
+  display: flex; 
+  align-items: flex-start; 
+  justify-content: space-between; 
+  gap: 16px; 
+}
+
+.dossier h3 { 
+  margin: 0; 
+  font: 700 14px/1.5 var(--head); 
+  letter-spacing: .06em; 
+  color: #fff; 
+  text-shadow: var(--glow-b); 
+}
+
+.readout { 
+  margin: 0; 
+  padding: 12px 16px; 
+  line-height: 1.5; 
+  color: var(--text); 
+  background: rgba(56, 217, 255, .06); 
+  border-left: 4px solid var(--blue); 
+}
+
+/* Tactical Sequence List */
+.seq { 
+  counter-reset: s; 
+  list-style: none; 
+  margin: 0; 
+  padding: 0; 
+  display: grid; 
+  gap: 8px; 
+}
+
+.seq li { 
+  counter-increment: s; 
+  display: grid; 
+  grid-template-columns: 32px minmax(0, 1fr); 
+  gap: 12px; 
+  align-items: start; 
+  padding: 10px 14px 10px 10px; 
+  background: rgba(255, 255, 255, .03); 
+  border: 1px solid var(--line); 
+}
+
+.seq li::before { 
+  content: counter(s); 
+  display: grid; 
+  place-items: center; 
+  height: 24px; 
+  font: 700 12px var(--head); 
+  color: var(--green); 
+  border: 1px solid var(--green); 
+}
+
+/* Dossier Responsive Stacking */
+@container (max-width: 760px) {
+  .ops__grid { 
+    grid-template-columns: minmax(0, 1fr); 
+  }
+  .dossier { 
+    padding: 20px 0 0; 
+    border-left: 0; 
+    border-top: 1px solid var(--line); 
+  }
+}
+
+@keyframes dossier-in { 
+  from { opacity: .3; transform: translateY(4px); } 
+}
+
+/* ==========================================================================
+   4. MARS FIELD SURVIVAL DICTIONARY (Quadrant 2)
+   ========================================================================== */
+.dict__grid { 
+  display: grid; 
+  grid-template-columns: repeat(2, minmax(0, 1fr)); 
+  gap: 10px; 
+  overflow-y: auto; 
+  padding-right: 6px; 
+  scrollbar-width: thin; 
+  scrollbar-color: #4a5a6e var(--bg-1); 
+}
+
+.dict details { 
+  background: #000; 
+  border: 1px solid rgba(56, 217, 255, .45); 
+}
+
+.dict summary { 
+  display: flex; 
+  justify-content: flex-start; 
+  align-items: baseline; 
+  gap: 10px; 
+  padding: 10px 12px; 
+  list-style: none; 
+  cursor: pointer; 
+  color: var(--green); 
+}
+
+.dict summary::-webkit-details-marker { 
+  display: none; 
+}
+
+.dict summary::after { 
+  content: "[+]"; 
+  flex: none; 
+  margin-left: auto; 
+  color: var(--dim); 
+}
+
+.dict details[open] { 
+  border-color: var(--green); 
+  box-shadow: var(--glow-g); 
+}
+
+.dict details[open] summary { 
+  border-bottom: 1px solid var(--line); 
+}
+
+.dict details[open] summary::after { 
+  content: "[\2212]"; 
+  color: var(--green); 
+}
+
+.dict details p { 
+  margin: 0; 
+  padding: 10px 12px 12px; 
+  line-height: 1.5; 
+  color: #c9d6e3; 
+}
+
+@container (max-width: 640px) { 
+  .dict__grid { 
+    grid-template-columns: minmax(0, 1fr); 
+  } 
+}
+
+/* ==========================================================================
+   5. CREW PSYCH EVALUATOR (#psych-widget)
+   ========================================================================== */
+/* Built dynamically by weather-panels.js */
+#psych-widget { 
+  --c: var(--green); 
+  display: grid; 
+  gap: 14px; 
+}
+
+#psych-widget[data-level="mid"] { --c: var(--amber); }
+#psych-widget[data-level="high"] { --c: var(--red); }
+
+.psy__top { 
+  display: flex; 
+  align-items: flex-end; 
+  justify-content: space-between; 
+  gap: 12px; 
+}
+
+.psy__status { 
+  font: 700 14px/1.5 var(--head); 
+  letter-spacing: .1em; 
+  color: var(--c); 
+}
+
+.psy__value { 
+  font: 700 40px/1 var(--head); 
+  color: var(--c); 
+  text-shadow: 0 0 10px var(--c); 
+}
+
+.psy__value small { 
+  font-size: 14px; 
+  color: var(--dim); 
+}
+
+#psych-widget[data-level="high"] .psy__value { 
+  animation: blink .8s infinite; 
+}
+
+/* ECG Heartbeat Display */
+.ecg { 
+  height: 46px; 
+  overflow: hidden; 
+  background: var(--bg-0); 
+  border: 1px solid var(--line); 
+}
+
+.ecg svg { 
+  display: block; 
+  width: 200%; 
+  height: 100%; 
+  animation: ecg var(--ecg-speed, 2.4s) linear infinite; 
+}
+
+.ecg path { 
+  fill: none; 
+  stroke: var(--c); 
+  stroke-width: 1.8; 
+  filter: drop-shadow(0 0 3px var(--c)); 
+  vector-effect: non-scaling-stroke; 
+}
+
+/* Stress Meter Bar */
+.psy__bar { 
+  display: grid; 
+  grid-template-columns: repeat(25, 1fr); 
+  gap: 3px; 
+}
+
+.psy__bar i { 
+  height: 16px; 
+  background: var(--bg-2); 
+  border: 1px solid var(--line); 
+  transition: .25s; 
+}
+
+.psy__bar i.on { 
+  background: var(--seg); 
+  border-color: var(--seg); 
+  box-shadow: 0 0 6px var(--seg); 
+}
+
+.psy__scale { 
+  display: flex; 
+  justify-content: space-between; 
+  font-size: 12px; 
+  color: var(--dim); 
+}
+
+/* Psych Questionnaire Inputs */
+.psy__inputs { 
+  display: grid; 
+  gap: 12px; 
+}
+
+.psy__inputs label { 
+  display: grid; 
+  gap: 6px; 
+}
+
+.psy__inputs label > span { 
+  display: flex; 
+  justify-content: space-between; 
+  font-size: 12px; 
+  color: var(--dim); 
+}
+
+.psy__inputs b { 
+  font-weight: 400; 
+  color: var(--blue); 
+}
+
+.psy__inputs input[type=range] { 
+  width: 100%; 
+  accent-color: var(--blue); 
+}
+
+/* Psych Advice & Recovery */
+.psy__advice { 
+  margin: 0; 
+  padding: 10px 14px; 
+  line-height: 1.5; 
+  background: rgba(255, 255, 255, .03); 
+  border-left: 4px solid var(--c); 
+}
+
+.psy__recovery { 
+  margin: 0; 
+  padding-left: 20px; 
+  font-size: 14px; 
+  line-height: 1.5; 
+  color: var(--text); 
+}
+
+.psy__recovery li { 
+  margin-bottom: 6px; 
+} 
+
+.psy__recovery li::marker { 
+  color: var(--green); 
+}
+
+/* Animations */
+@keyframes ecg { 
+  to { transform: translateX(-50%); } 
+}

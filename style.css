@@ -1,0 +1,1118 @@
+/* ==========================================================================
+   ARES-1 COMMAND CENTER — Sci-Fi Dark Theme
+   ========================================================================== */
+
+/* ==========================================================================
+   1. GLOBAL VARIABLES & BASE STYLES
+   ========================================================================== */
+:root {
+  --bg-0: #05080f;
+  --bg-1: #0a111d;          /* Deep space grey-blue */
+  --bg-2: #101a2b;
+  --line: #1e3048;
+  --text: #cfe3f2;
+  --text-dim: #7f97ad;
+  --green: #39ff88;         /* Tech green */
+  --blue: #38d9ff;          /* Fluorescent blue */
+  --amber: #ffb02e;
+  --red: #ff3b57;
+  
+  /* Glow Effects */
+  --glow-g: 0 0 6px rgba(57, 255, 136, .55), 0 0 18px rgba(57, 255, 136, .25);
+  --glow-b: 0 0 6px rgba(56, 217, 255, .55), 0 0 18px rgba(56, 217, 255, .25);
+  
+  /* Typography */
+  --mono: "Share Tech Mono", "JetBrains Mono", "Consolas", monospace;
+  --head: "Orbitron", "Rajdhani", "Segoe UI", sans-serif;
+}
+
+* { 
+  box-sizing: border-box; 
+}
+
+html, body { 
+  height: 100%; 
+  margin: 0; 
+}
+
+body {
+  background:
+    radial-gradient(1200px 600px at 75% -10%, rgba(56, 217, 255, .08), transparent 60%),
+    radial-gradient(900px 500px at 0% 110%, rgba(57, 255, 136, .06), transparent 60%),
+    var(--bg-0);
+  color: var(--text);
+  font: 14px/1.55 var(--mono);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+/* Faint Scanlines Overlay */
+body::after {
+  content: ""; 
+  position: fixed; 
+  inset: 0; 
+  pointer-events: none; 
+  z-index: 9999;
+  background: repeating-linear-gradient(0deg, rgba(255, 255, 255, .025) 0 1px, transparent 1px 3px);
+}
+
+/* Hide elements globally */
+[hidden] { 
+  display: none !important; 
+}
+
+/* ==========================================================================
+   2. HEADER (Top Navigation Bar)
+   ========================================================================== */
+.topbar {
+  display: flex; 
+  align-items: center; 
+  gap: 16px; 
+  padding: 10px 20px;
+  background: linear-gradient(180deg, #0e1727, #09101b);
+  border-bottom: 1px solid var(--line);
+}
+
+.topbar h1 {
+  margin: 0; 
+  font: 700 16px var(--head); 
+  letter-spacing: .25em; 
+  color: var(--blue); 
+  text-shadow: var(--glow-b);
+}
+
+.topbar .status { 
+  margin-left: auto; 
+  color: var(--green); 
+  font-size: 12px; 
+  letter-spacing: .15em; 
+  text-shadow: var(--glow-g); 
+}
+
+.topbar .status::before { 
+  content: "● "; 
+  animation: blink 1.6s infinite; 
+}
+
+/* ==========================================================================
+   3. MAIN LAYOUT & PANELS
+   ========================================================================== */
+.command { 
+  display: grid; 
+  grid-template-columns: minmax(0, 1fr) 420px; 
+  gap: 18px; 
+  padding: 16px; 
+  min-height: 0; 
+  overflow: hidden; 
+}
+
+.stage, .sidebar { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 18px; 
+  min-height: 0; 
+  overflow-y: auto; 
+  padding: 2px 6px 2px 2px; 
+}
+
+/* Prevent panels from being squashed */
+.stage > .panel, .sidebar > .panel { 
+  flex: 0 0 auto; 
+}   
+
+.panel {
+  position: relative; 
+  min-height: 0;
+  background: linear-gradient(160deg, var(--bg-2), var(--bg-1));
+  border: 1px solid rgba(56, 217, 255, .45);
+  box-shadow: inset 0 0 24px rgba(56, 217, 255, .06), 0 0 14px rgba(56, 217, 255, .18);
+  border-radius: 4px;
+}
+
+/* Panel Corner Brackets */
+.panel::before, .panel::after {
+  content: ""; 
+  position: absolute; 
+  width: 16px; 
+  height: 16px; 
+  pointer-events: none; 
+  z-index: 5;
+  border: 2px solid var(--green); 
+  filter: drop-shadow(0 0 4px var(--green));
+}
+.panel::before { top: -2px; left: -2px; border-right: 0; border-bottom: 0; }
+.panel::after  { bottom: -2px; right: -2px; border-left: 0; border-top: 0; }
+
+.panel__head {
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  padding: 10px 14px;
+  font: 700 12px var(--head); 
+  letter-spacing: .2em; 
+  color: var(--green); 
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--line);
+}
+
+.panel__head small { 
+  margin-left: auto; 
+  color: var(--text-dim); 
+  font: 11px var(--mono); 
+  letter-spacing: .1em; 
+}
+
+/* Metallic Divider */
+.divider {
+  height: 3px; 
+  border: 0; 
+  margin: 14px 0;
+  background: linear-gradient(90deg, transparent, #3a4a5e 12%, #c9d6e3 30%, #5b6b7e 50%, #c9d6e3 70%, #3a4a5e 88%, transparent);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, .6), 0 0 8px rgba(56, 217, 255, .2);
+}
+
+/* ==========================================================================
+   4. MAP PANEL & LEAFLET OVERRIDES
+   ========================================================================== */
+.map-panel { 
+  padding-bottom: 8px; 
+}
+
+#mars-map { 
+  aspect-ratio: 2 / 1; 
+  width: calc(100% - 16px); 
+  margin: 8px; 
+  background: #02040a; 
+  border: 1px solid var(--line); 
+}
+
+/* Map HUD and Controls */
+.map-tools { 
+  display: flex; 
+  align-items: center; 
+  gap: 14px; 
+  flex-wrap: wrap; 
+  padding: 8px 14px 0; 
+}
+
+.map-tools__hint { 
+  margin-left: auto; 
+  font-size: 10px; 
+  letter-spacing: .12em; 
+  color: var(--text-dim); 
+}
+
+.map-hud { 
+  display: flex; 
+  gap: 14px; 
+  padding: 4px 10px; 
+  font: 11px var(--mono); 
+  letter-spacing: .08em; 
+  color: var(--green);
+  background: rgba(5, 10, 18, .85); 
+  border: 1px solid var(--line); 
+  text-shadow: var(--glow-g); 
+}
+
+/* Leaflet Overrides */
+.leaflet-container { 
+  font-family: var(--mono); 
+  cursor: grab; 
+} 
+.leaflet-dragging .leaflet-container { 
+  cursor: grabbing; 
+}
+
+.leaflet-control-layers {
+  background: rgba(8, 14, 24, .92); 
+  color: var(--blue); 
+  border: 1px solid var(--blue);
+  border-radius: 3px; 
+  box-shadow: var(--glow-b);
+}
+
+.leaflet-control-layers label { 
+  color: var(--text); 
+  letter-spacing: .1em; 
+}
+
+.leaflet-bar { 
+  border: 1px solid var(--blue) !important; 
+  box-shadow: var(--glow-b); 
+  border-radius: 3px; 
+}
+
+.leaflet-bar a, .leaflet-bar a:hover { 
+  background: #0a111d; 
+  color: var(--blue); 
+  border-bottom: 1px solid var(--line); 
+  font-family: var(--mono); 
+}
+
+.leaflet-bar a:hover { 
+  background: #12253a; 
+  color: #fff; 
+}
+
+.leaflet-bar a.leaflet-disabled { 
+  color: #3a4a5e; 
+  background: #070c14; 
+}
+
+.mars-reset a { 
+  font-size: 18px; 
+  line-height: 30px; 
+}
+
+/* Map Tooltips */
+.sci-tip {
+  background: rgba(5, 10, 18, .94); 
+  color: var(--green); 
+  border: 1px solid var(--green);
+  border-radius: 2px; 
+  font: 11px var(--mono); 
+  letter-spacing: .06em; 
+  box-shadow: var(--glow-g);
+}
+
+.sci-tip::before { 
+  display: none; 
+}
+
+/* ==========================================================================
+   5. MAP PINS & BEACONS
+   ========================================================================== */
+.legend { 
+  display: flex; 
+  flex-wrap: wrap; 
+  gap: 6px 18px; 
+  padding: 2px 14px 4px; 
+  font-size: 11px; 
+  color: var(--text-dim); 
+  letter-spacing: .08em; 
+}
+
+.legend i { 
+  display: inline-block; 
+  width: 9px; 
+  height: 9px; 
+  margin-right: 6px; 
+  transform: rotate(45deg); 
+  background: var(--c); 
+  box-shadow: 0 0 6px var(--c); 
+}
+
+.beacons { 
+  display: grid; 
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); 
+  gap: 6px; 
+  padding: 10px 14px 14px; 
+}
+
+.beacon { 
+  display: flex; 
+  align-items: center; 
+  gap: 8px; 
+  text-align: left; 
+  padding: 6px 8px; 
+  font: 11px var(--mono); 
+  color: var(--text);
+  background: #0a1422; 
+  border: 1px solid var(--line); 
+  cursor: pointer; 
+  min-width: 0; 
+}
+
+.beacon:hover, .beacon.is-active { 
+  border-color: var(--blue); 
+  color: var(--blue); 
+}
+
+.beacon i { 
+  flex: none; 
+  width: 8px; 
+  height: 8px; 
+  transform: rotate(45deg); 
+  background: var(--c); 
+  box-shadow: 0 0 6px var(--c); 
+}
+
+.beacon span { 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
+  white-space: nowrap; 
+}
+
+.beacon em { 
+  margin-left: auto; 
+  font-style: normal; 
+  color: var(--amber); 
+  flex: none; 
+}
+
+/* Severity Colors for Pins & Beacons */
+.sev-moderate { --c: var(--green); } 
+.sev-warning { --c: var(--amber); } 
+.sev-critical { --c: var(--red); }
+
+/* Map Pins */
+.pin-wrap { 
+  background: none; 
+  border: 0; 
+}
+
+.pin { 
+  --c: var(--green); 
+  position: relative; 
+  width: 24px; 
+  height: 24px; 
+  cursor: pointer; 
+}
+
+.pin--moderate { --c: var(--green); }
+.pin--warning  { --c: var(--amber); }
+.pin--critical { --c: var(--red); }
+
+.pin__core {
+  position: absolute; 
+  inset: 8px; 
+  background: var(--c); 
+  transform: rotate(45deg);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, .65), 0 0 8px var(--c); 
+  border: 1px solid #fffa;
+}
+
+.pin__ring {
+  position: absolute; 
+  inset: 2px; 
+  border: 1.5px solid var(--c); 
+  border-radius: 50%;
+  animation: ping 2.2s ease-out infinite; 
+  opacity: .9;
+}
+
+.pin__badge {
+  position: absolute; 
+  top: -9px; 
+  right: -11px; 
+  min-width: 16px; 
+  height: 16px; 
+  padding: 0 3px;
+  background: #050a12; 
+  color: var(--blue); 
+  border: 1px solid var(--blue); 
+  border-radius: 9px;
+  font: 700 10px/14px var(--mono); 
+  text-align: center; 
+  box-shadow: var(--glow-b);
+}
+
+.pin.is-active .pin__core { 
+  inset: 6px; 
+  background: #fff; 
+  box-shadow: 0 0 10px var(--c), 0 0 28px var(--c); 
+}
+
+.pin.is-active .pin__ring { 
+  inset: 0; 
+  border-width: 2px; 
+}
+
+.pin:hover .pin__core { 
+  background: #fff; 
+}
+
+/* ==========================================================================
+   6. DASHBOARD SIDEBAR & RECORD VIEWER
+   ========================================================================== */
+.stage::-webkit-scrollbar, .sidebar::-webkit-scrollbar { 
+  width: 8px; 
+}
+
+.stage::-webkit-scrollbar-thumb, .sidebar::-webkit-scrollbar-thumb { 
+  background: linear-gradient(#5b6b7e, #2a3646); 
+  border-radius: 4px; 
+}
+
+.dash { 
+  padding-bottom: 14px; 
+  overflow: hidden; 
+}
+
+.dash__empty { 
+  padding: 36px 20px; 
+  text-align: center; 
+  color: var(--text-dim); 
+  letter-spacing: .12em; 
+}
+
+.dash__empty b { 
+  display: block; 
+  color: var(--blue); 
+  font: 700 13px var(--head); 
+  margin-bottom: 8px; 
+  text-shadow: var(--glow-b); 
+  animation: blink 2.4s infinite; 
+}
+
+.dash__body { 
+  padding: 14px 16px 4px; 
+}
+
+.dash__body.flash { 
+  animation: slidein .35s ease-out; 
+}
+
+.dash__title { 
+  margin: 8px 0 10px; 
+  font: 700 17px/1.3 var(--head); 
+  color: #fff; 
+  letter-spacing: .04em; 
+}
+
+.meta { 
+  display: flex; 
+  flex-wrap: wrap; 
+  gap: 6px 14px; 
+  color: var(--text-dim); 
+  font-size: 12px; 
+}
+
+.meta span::before { 
+  content: "▸ "; 
+  color: var(--green); 
+}
+
+.dash__label {
+  margin: 14px 0 6px; 
+  font: 700 11px var(--head); 
+  letter-spacing: .22em; 
+  color: var(--blue);
+}
+
+.readout {
+  padding: 10px 12px; 
+  background: rgba(56, 217, 255, .06); 
+  border-left: 3px solid var(--blue); 
+  margin: 0;
+}
+
+#dash-protocol { 
+  list-style: none; 
+  counter-reset: s; 
+  margin: 0; 
+  padding: 0; 
+  display: grid; 
+  gap: 8px; 
+}
+
+#dash-protocol li {
+  counter-increment: s; 
+  position: relative; 
+  padding: 9px 10px 9px 44px;
+  background: rgba(57, 255, 136, .045); 
+  border: 1px solid rgba(57, 255, 136, .2);
+}
+
+#dash-protocol li::before {
+  content: counter(s, decimal-leading-zero); 
+  position: absolute; 
+  left: 10px; 
+  top: 9px;
+  font: 700 14px var(--head); 
+  color: var(--green); 
+  text-shadow: var(--glow-g);
+}
+
+/* Sidebar Chip Records */
+.records-count { 
+  margin: 12px 0 6px; 
+  font-size: 11px; 
+  letter-spacing: .15em; 
+  color: var(--amber); 
+}
+
+.records { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 5px; 
+  max-height: 168px; 
+  overflow-y: auto; 
+  padding-right: 4px; 
+}
+
+.chip {
+  font: 11px var(--mono); 
+  color: var(--text); 
+  background: #0a1422; 
+  border: 1px solid var(--line);
+  padding: 5px 8px; 
+  cursor: pointer; 
+  border-radius: 2px; 
+  text-align: left; 
+  transition: .15s; 
+  flex: none; 
+  max-width: 100%; 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
+  white-space: nowrap;
+}
+
+.chip:hover { 
+  border-color: var(--blue); 
+  color: var(--blue); 
+}
+
+.chip.is-active { 
+  border-color: var(--green); 
+  color: var(--green); 
+  box-shadow: var(--glow-g); 
+}
+
+/* Status Badges */
+.badge { 
+  display: inline-block; 
+  padding: 2px 10px; 
+  font: 700 11px var(--head); 
+  letter-spacing: .2em; 
+  border: 1px solid; 
+}
+.badge--moderate { color: var(--green); border-color: var(--green); box-shadow: var(--glow-g); }
+.badge--warning  { color: var(--amber); border-color: var(--amber); box-shadow: 0 0 10px rgba(255, 176, 46, .5); }
+.badge--critical { color: var(--red);   border-color: var(--red);   box-shadow: 0 0 10px rgba(255, 59, 87, .6); animation: blink 1s infinite; }
+
+.coordnote { 
+  margin: 10px 0 0; 
+  padding: 6px 10px; 
+  font-size: 12px; 
+  line-height: 1.5; 
+  color: var(--amber); 
+  background: rgba(255, 176, 46, .07); 
+  border-left: 3px solid var(--amber); 
+}
+
+.footer { 
+  padding: 6px 20px; 
+  text-align: right; 
+  color: var(--text-dim); 
+  font-size: 11px; 
+  border-top: 1px solid var(--line); 
+}
+
+/* Base Operations Tabs */
+.tabs { 
+  display: flex; 
+  flex-wrap: wrap; 
+  gap: 6px; 
+  padding: 10px 14px 0; 
+}
+
+.tab { 
+  font: 700 10px var(--head); 
+  letter-spacing: .08em; 
+  color: var(--text-dim); 
+  background: transparent; 
+  border: 1px solid var(--line);
+  padding: 6px 10px; 
+  cursor: pointer; 
+  transition: .15s; 
+}
+
+.tab:hover { 
+  color: var(--blue); 
+  border-color: var(--blue); 
+}
+
+.tab.is-active { 
+  color: var(--green); 
+  border-color: var(--green); 
+  box-shadow: var(--glow-g); 
+  background: rgba(57, 255, 136, .06); 
+}
+
+/* ==========================================================================
+   7. CREW PSYCH STATUS WIDGET
+   ========================================================================== */
+.psych { 
+  padding: 0 16px 16px; 
+  --c: var(--green); 
+}
+.psych[data-level="mid"]  { --c: var(--amber); }
+.psych[data-level="high"] { --c: var(--red); }
+
+.psych__top { 
+  display: flex; 
+  align-items: flex-end; 
+  justify-content: space-between; 
+  margin-top: 14px; 
+}
+
+.psych__label { 
+  font: 11px var(--head); 
+  letter-spacing: .2em; 
+  color: var(--text-dim); 
+}
+
+.psych__value { 
+  font: 700 40px/1 var(--head); 
+  color: var(--c); 
+  text-shadow: 0 0 10px var(--c); 
+}
+.psych__value small { font-size: 16px; opacity: .8; }
+
+.psych__status { 
+  margin: 6px 0 10px; 
+  font: 700 12px var(--head); 
+  letter-spacing: .18em; 
+  color: var(--c); 
+}
+
+.psych[data-level="high"] .psych__value,
+.psych[data-level="high"] .psych__status { 
+  animation: blink .8s infinite; 
+}
+.psych[data-level="high"] { 
+  animation: alarm 1s infinite; 
+}
+
+/* ECG Heartbeat Display */
+.ecg { 
+  height: 46px; 
+  border: 1px solid var(--line); 
+  background: #060b14; 
+  overflow: hidden; 
+  position: relative; 
+}
+
+.ecg svg { 
+  width: 200%; 
+  height: 100%; 
+  animation: ecg var(--ecg-speed, 2.4s) linear infinite; 
+}
+
+.ecg path { 
+  fill: none; 
+  stroke: var(--c); 
+  stroke-width: 1.8; 
+  filter: drop-shadow(0 0 3px var(--c)); 
+  vector-effect: non-scaling-stroke; 
+}
+
+/* Stress Segment Bar */
+.bar { 
+  display: grid; 
+  grid-template-columns: repeat(25, 1fr); 
+  gap: 3px; 
+  margin: 10px 0 4px; 
+}
+.bar i { 
+  height: 16px; 
+  background: #111c2c; 
+  border: 1px solid #1b2b42; 
+  transition: background .25s, box-shadow .25s; 
+}
+.bar i.on { 
+  background: var(--seg); 
+  box-shadow: 0 0 6px var(--seg); 
+  border-color: var(--seg); 
+}
+.bar-scale { 
+  display: flex; 
+  justify-content: space-between; 
+  font-size: 10px; 
+  color: var(--text-dim); 
+}
+
+/* Psych Input Forms */
+.psych__inputs { 
+  display: grid; 
+  gap: 10px; 
+  margin-top: 14px; 
+}
+
+.psych__inputs label { 
+  display: grid; 
+  gap: 4px; 
+  font-size: 11px; 
+  letter-spacing: .08em; 
+  color: var(--text-dim); 
+}
+
+.psych__inputs label span b { 
+  color: var(--blue); 
+  float: right; 
+  font-weight: 400; 
+}
+
+.psych select, .psych input[type=range] { 
+  width: 100%; 
+}
+
+.psych select {
+  background: #0a1422; 
+  color: var(--text); 
+  border: 1px solid var(--line); 
+  padding: 5px 6px; 
+  font: 12px var(--mono);
+}
+
+.psych input[type=range] { 
+  accent-color: var(--blue); 
+}
+
+.psych__advice { 
+  margin: 12px 0 0; 
+  padding: 8px 10px; 
+  font-size: 12px; 
+  border-left: 3px solid var(--c); 
+  background: rgba(255, 255, 255, .03); 
+}
+
+.psych__recovery { 
+  margin: 12px 0 0; 
+  padding-left: 20px; 
+  font-size: 12px; 
+  line-height: 1.5; 
+  color: var(--text); 
+}
+
+.psych__recovery li { 
+  margin-bottom: 6px; 
+}
+
+/* ==========================================================================
+   8. SPECIALIZED BUTTONS & WIDGETS
+   ========================================================================== */
+
+/* SCAN FOR ANOMALIES Button */
+.scan { 
+  position: relative; 
+  display: inline-flex; 
+  align-items: center; 
+  gap: 10px; 
+  padding: 9px 18px; 
+  cursor: pointer;
+  font: 700 12px var(--head); 
+  letter-spacing: .22em; 
+  color: var(--red); 
+  background: rgba(255, 59, 87, .07);
+  border: 1px solid var(--red); 
+  box-shadow: 0 0 10px rgba(255, 59, 87, .35), inset 0 0 10px rgba(255, 59, 87, .12);
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); 
+  transition: .15s; 
+}
+.scan:hover { 
+  background: rgba(255, 59, 87, .18); 
+  color: #fff; 
+  box-shadow: 0 0 20px rgba(255, 59, 87, .7); 
+}
+.scan:focus-visible { 
+  outline: 2px solid var(--blue); 
+  outline-offset: 3px; 
+}
+.scan__dot { 
+  width: 8px; 
+  height: 8px; 
+  border-radius: 50%; 
+  background: var(--red); 
+  box-shadow: 0 0 8px var(--red); 
+  animation: blink 1.2s infinite; 
+}
+.scan.is-scanning { 
+  pointer-events: none; 
+  color: var(--amber); 
+  border-color: var(--amber); 
+}
+.scan.is-scanning .scan__dot { 
+  background: var(--amber); 
+  animation-duration: .25s; 
+}
+
+/* WEATHER MATRIX Button */
+.matrix-btn { 
+  position: relative; 
+  flex: 0 0 auto; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  gap: 12px; 
+  padding: 16px 14px; 
+  text-decoration: none;
+  font: 700 12px var(--head); 
+  letter-spacing: .2em; 
+  color: var(--blue); 
+  background: linear-gradient(135deg, rgba(56, 217, 255, .1), rgba(57, 255, 136, .06));
+  border: 1px solid var(--blue); 
+  box-shadow: var(--glow-b), inset 0 0 18px rgba(56, 217, 255, .1); 
+  overflow: hidden; 
+  transition: .2s;
+  clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px); 
+}
+.matrix-btn::after { 
+  content: ""; 
+  position: absolute; 
+  inset: 0; 
+  background: linear-gradient(100deg, transparent 35%, rgba(255, 255, 255, .18) 50%, transparent 65%); 
+  transform: translateX(-120%); 
+  animation: shine 3.2s infinite; 
+}
+.matrix-btn:hover, .matrix-btn:focus-visible { 
+  color: #fff; 
+  background: rgba(56, 217, 255, .22); 
+  box-shadow: 0 0 26px rgba(56, 217, 255, .7); 
+  outline: none; 
+}
+.matrix-btn__pulse { 
+  width: 8px; 
+  height: 8px; 
+  border-radius: 50%; 
+  background: var(--green); 
+  box-shadow: 0 0 8px var(--green); 
+  animation: blink 1.4s infinite; 
+}
+.matrix-btn__arrow { 
+  font-size: 15px; 
+}
+
+/* TARGET LOCK Reticle */
+.reticle-wrap { 
+  background: none; 
+  border: 0; 
+  pointer-events: none; 
+}
+.reticle { 
+  position: relative; 
+  width: 96px; 
+  height: 96px; 
+  animation: lock 1.6s cubic-bezier(.2, .8, .2, 1) both, lockfade 2.8s forwards; 
+}
+.reticle i { 
+  position: absolute; 
+  width: 18px; 
+  height: 18px; 
+  border: 2px solid var(--green); 
+  filter: drop-shadow(0 0 4px var(--green)); 
+}
+.reticle i:nth-child(1) { top: 0; left: 0; border-right: 0; border-bottom: 0; }
+.reticle i:nth-child(2) { top: 0; right: 0; border-left: 0; border-bottom: 0; }
+.reticle i:nth-child(3) { bottom: 0; left: 0; border-right: 0; border-top: 0; }
+.reticle i:nth-child(4) { bottom: 0; right: 0; border-left: 0; border-top: 0; }
+.reticle span { 
+  position: absolute; 
+  left: 50%; 
+  top: 100%; 
+  margin-top: 6px; 
+  transform: translateX(-50%); 
+  white-space: nowrap; 
+  font: 700 10px var(--head); 
+  letter-spacing: .25em; 
+  color: var(--green); 
+  text-shadow: var(--glow-g); 
+  animation: blink .5s 4; 
+}
+
+/* Survival Dictionary (Searchable List) */
+.dict { 
+  padding: 12px 14px 14px; 
+}
+.dict__search { 
+  width: 100%; 
+  padding: 8px 10px; 
+  font: 13px var(--mono); 
+  color: var(--text); 
+  background: #0a1422; 
+  border: 1px solid var(--line); 
+}
+.dict__search:focus { 
+  outline: none; 
+  border-color: var(--blue); 
+  box-shadow: var(--glow-b); 
+}
+.dict__list { 
+  display: grid; 
+  gap: 6px; 
+  margin-top: 10px; 
+  max-height: 260px; 
+  overflow-y: auto; 
+}
+.dict details { 
+  background: #0a1422; 
+  border: 1px solid var(--line); 
+}
+.dict summary { 
+  padding: 7px 10px; 
+  cursor: pointer; 
+  color: var(--blue); 
+  font-size: 13px; 
+}
+.dict details[open] summary { 
+  color: var(--green); 
+  border-bottom: 1px solid var(--line); 
+}
+.dict p { 
+  margin: 0; 
+  padding: 8px 10px; 
+  font-size: 13px; 
+  line-height: 1.55; 
+}
+
+/* USGS Landmarks (Map Overlay) */
+.lm { 
+  position: relative; 
+  width: 16px; 
+  height: 16px; 
+  cursor: pointer; 
+}
+.lm i { 
+  position: absolute; 
+  inset: 3px; 
+  background: #00ffcc; 
+  transform: rotate(45deg); 
+  border: 1px solid #fff; 
+  box-shadow: 0 0 6px #00ffcc; 
+}
+.lm:hover i { 
+  background: #fff; 
+}
+
+/* ==========================================================================
+   9. EMERGENCY ALERT MODAL (Random Incidents)
+   ========================================================================== */
+.alert-overlay { 
+  position: fixed; 
+  inset: 0; 
+  z-index: 10000; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  padding: 20px;
+  background: radial-gradient(circle at center, rgba(90, 0, 12, .78), rgba(35, 0, 6, .93)); 
+  animation: overlay-pulse 1s infinite; 
+}
+
+.alert-modal { 
+  width: min(640px, 100%); 
+  background: #14070b; 
+  border: 2px solid var(--red); 
+  text-align: center;
+  box-shadow: 0 0 30px var(--red), 0 0 90px rgba(255, 59, 87, .5), inset 0 0 30px rgba(255, 59, 87, .2); 
+  animation: modal-flash 1s infinite, slidein .3s ease-out; 
+}
+
+.alert-modal__bar { 
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+  gap: 14px; 
+  padding: 10px; 
+  font: 700 13px var(--head); 
+  letter-spacing: .3em;
+  color: #fff; 
+  background: repeating-linear-gradient(-45deg, #b3122b 0 14px, #5c0a16 14px 28px); 
+  text-shadow: 0 1px 3px #000; 
+}
+
+.alert-modal__text { 
+  margin: 0; 
+  padding: 28px 28px 12px; 
+  font: 700 clamp(16px, 2.6vw, 22px)/1.45 var(--head); 
+  color: #ffd7dc; 
+  text-shadow: 0 0 12px var(--red); 
+  letter-spacing: .03em; 
+}
+
+.alert-btn { 
+  margin: 14px 0 28px; 
+  padding: 12px 30px; 
+  cursor: pointer; 
+  font: 700 14px var(--head); 
+  letter-spacing: .25em; 
+  color: #fff;
+  background: rgba(255, 59, 87, .2); 
+  border: 2px solid var(--red); 
+  box-shadow: 0 0 16px var(--red); 
+  transition: .15s; 
+}
+.alert-btn:hover, .alert-btn:focus-visible { 
+  background: var(--red); 
+  color: #1a0308; 
+  outline: none; 
+  box-shadow: 0 0 30px var(--red); 
+}
+
+/* Pulsing red topbar when alarm is active */
+body.alarm-on .topbar { 
+  animation: alarm-bar 1s infinite; 
+}
+
+/* ==========================================================================
+   10. KEYFRAME ANIMATIONS
+   ========================================================================== */
+@keyframes ping { 
+  0% { transform: scale(.5); opacity: 1; } 
+  100% { transform: scale(1.5); opacity: 0; } 
+}
+
+@keyframes blink { 
+  50% { opacity: .35; } 
+}
+
+@keyframes slidein { 
+  from { opacity: 0; transform: translateX(14px); } 
+  to { opacity: 1; transform: none; } 
+}
+
+@keyframes ecg { 
+  to { transform: translateX(-50%); } 
+}
+
+@keyframes alarm { 
+  50% { box-shadow: inset 0 0 18px rgba(255, 59, 87, .35); } 
+}
+
+@keyframes shine { 
+  60%, 100% { transform: translateX(120%); } 
+}
+
+@keyframes lock { 
+  from { transform: scale(3.2) rotate(90deg); opacity: 0; } 
+  60% { opacity: 1; } 
+  to { transform: scale(1) rotate(0); opacity: 1; } 
+}
+
+@keyframes lockfade { 
+  0%, 80% { opacity: 1; } 
+  100% { opacity: 0; } 
+}
+
+@keyframes overlay-pulse { 
+  50% { background: radial-gradient(circle at center, rgba(130, 0, 18, .82), rgba(50, 0, 8, .95)); } 
+}
+
+@keyframes modal-flash { 
+  50% { border-color: #ff8a9a; box-shadow: 0 0 14px var(--red), 0 0 40px rgba(255, 59, 87, .35), inset 0 0 14px rgba(255, 59, 87, .12); } 
+}
+
+@keyframes alarm-bar { 
+  50% { background: #3a0710; } 
+}
+
+/* ==========================================================================
+   11. RESPONSIVE QUERIES
+   ========================================================================== */
+@media (max-width: 900px) {
+  body { 
+    height: auto; 
+  }
+  .command { 
+    grid-template-columns: 1fr; 
+    overflow: visible; 
+  }
+  .stage, .sidebar { 
+    overflow: visible; 
+  }
+}
+
+@media (prefers-reduced-motion: reduce) { 
+  * { animation: none !important; } 
+}

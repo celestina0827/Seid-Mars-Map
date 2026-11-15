@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#05080f">
+  
+  <title>INTERPLANETARY SURVIVAL GUIDE: SEID MARS APP</title>
+  
+  <!-- External Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&display=swap">
+  
+  <style>
+    /* ======================================================================
+       ARES-1 — GAME START MENU
+       Palette: #05080f / #0a111d · cyan #38d9ff · green #39ff88 · amber #ffb02e
+       ====================================================================== */
+    
+    /* ---------- GLOBAL VARIABLES ---------- */
+    :root {
+      --bg-0: #05080f;
+      --bg-1: #0a111d;
+      --bg-2: #101a2b;
+      --line: #26405c;
+      --text: #e8f5ff;
+      --dim: #a7c4dc;
+      --cyan: #38d9ff;
+      --green: #39ff88;
+      --amber: #ffb02e;
+      --red: #ff3b57;
+      --head: "Orbitron", "Rajdhani", "Segoe UI", sans-serif;
+      --mono: "Share Tech Mono", "Consolas", "Menlo", monospace;
+    }
+
+    /* ---------- RESET & BASE ---------- */
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      background: var(--bg-0);
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font: 14px/1.6 var(--mono);
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--amber);
+      outline-offset: 4px;
+    }
+
+    /* ---------- BACKGROUND: Deep space + terminal grid ---------- */
+    .bg {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      overflow: hidden;
+      background:
+        radial-gradient(1200px 640px at 50% -10%, rgba(56, 217, 255, .10), transparent 62%),
+        radial-gradient(900px 600px at 100% 110%, rgba(255, 140, 60, .10), transparent 60%),
+        radial-gradient(700px 500px at 0% 100%, rgba(57, 255, 136, .06), transparent 60%),
+        linear-gradient(180deg, var(--bg-1), var(--bg-0) 70%);
+    }
+
+    .bg__grid {
+      position: absolute;
+      inset: -56px 0 0 0;
+      background:
+        linear-gradient(rgba(56, 217, 255, .07) 1px, transparent 1px) 0 0 / 56px 56px,
+        linear-gradient(90deg, rgba(56, 217, 255, .07) 1px, transparent 1px) 0 0 / 56px 56px;
+      -webkit-mask: radial-gradient(ellipse 80% 70% at 50% 40%, #000 20%, transparent 85%);
+      mask: radial-gradient(ellipse 80% 70% at 50% 40%, #000 20%, transparent 85%);
+      animation: grid-drift 14s linear infinite;
+    }
+
+    .bg__stars {
+      position: absolute;
+      inset: 0;
+      opacity: .85;
+      background-image:
+        radial-gradient(1.4px 1.4px at 8% 14%, #fff, transparent), radial-gradient(1px 1px at 17% 62%, #cfe9ff, transparent),
+        radial-gradient(1.6px 1.6px at 26% 32%, #fff, transparent), radial-gradient(1px 1px at 34% 82%, #bfe3ff, transparent),
+        radial-gradient(1.2px 1.2px at 44% 9%, #fff, transparent), radial-gradient(1px 1px at 53% 47%, #cfe9ff, transparent),
+        radial-gradient(1.6px 1.6px at 61% 24%, #fff, transparent), radial-gradient(1px 1px at 68% 74%, #bfe3ff, transparent),
+        radial-gradient(1.2px 1.2px at 77% 12%, #fff, transparent), radial-gradient(1px 1px at 84% 52%, #cfe9ff, transparent),
+        radial-gradient(1.5px 1.5px at 91% 28%, #fff, transparent), radial-gradient(1px 1px at 96% 86%, #bfe3ff, transparent),
+        radial-gradient(1px 1px at 4% 90%, #fff, transparent), radial-gradient(1.2px 1.2px at 39% 56%, #cfe9ff, transparent);
+      animation: twinkle 6s ease-in-out infinite alternate;
+    }
+
+    .bg__planet {
+      position: absolute;
+      right: -22vmin;
+      bottom: -52vmin;
+      width: 96vmin;
+      height: 96vmin;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 28%, rgba(255, 170, 110, .28), rgba(150, 60, 30, .20) 42%, rgba(40, 12, 8, .0) 72%);
+      box-shadow: 0 0 140px rgba(255, 120, 60, .16), inset 0 0 80px rgba(255, 150, 90, .10);
+    }
+
+    .bg__vignette {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, .65) 100%);
+    }
+
+    /* Scanlines effect */
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 50;
+      background: repeating-linear-gradient(0deg, rgba(255, 255, 255, .022) 0 1px, transparent 1px 3px);
+    }
+
+    /* ---------- HUD CORNER FRAMES ---------- */
+    .frame {
+      position: fixed;
+      inset: 14px;
+      pointer-events: none;
+      z-index: 40;
+    }
+
+    .frame i {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      border: 2px solid var(--green);
+      filter: drop-shadow(0 0 5px var(--green));
+      opacity: .8;
+    }
+
+    .frame i:nth-child(1) { top: 0; left: 0; border-right: 0; border-bottom: 0; }
+    .frame i:nth-child(2) { top: 0; right: 0; border-left: 0; border-bottom: 0; }
+    .frame i:nth-child(3) { bottom: 0; left: 0; border-right: 0; border-top: 0; }
+    .frame i:nth-child(4) { bottom: 0; right: 0; border-left: 0; border-top: 0; }
+
+    /* ---------- TOP STATUS STRIP ---------- */
+    .strip {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      padding: 26px 44px 0;
+      font-size: 12px;
+      letter-spacing: .16em;
+      color: var(--dim);
+      text-transform: uppercase;
+    }
+
+    .strip b {
+      font-weight: 400;
+      color: var(--green);
+      text-shadow: 0 0 8px rgba(57, 255, 136, .7);
+    }
+
+    .strip b::before {
+      content: "● ";
+      animation: blink 1.4s infinite;
+    }
+
+    /* ---------- HERO SECTION ---------- */
+    main {
+      width: min(1240px, 100%);
+      margin: 0 auto;
+      padding: 0 24px 40px;
+    }
+
+    .hero {
+      min-height: clamp(520px, 66vh, 780px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 36px 0 24px;
+    }
+
+    .eyebrow {
+      margin: 0 0 18px;
+      font: 12px/1.5 var(--mono);
+      letter-spacing: .34em;
+      color: var(--amber);
+      text-shadow: 0 0 10px rgba(255, 176, 46, .55);
+    }
+
+    .title {
+      margin: 0;
+      font: 900 clamp(16px, 3.2vw, 46px)/1.15 var(--head);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: #eaffff;
+      text-shadow: 0 0 10px rgba(56, 217, 255, .9), 0 0 36px rgba(56, 217, 255, .5), 0 0 90px rgba(56, 217, 255, .28);
+      animation: flicker 7s infinite;
+    }
+
+    .title .g {
+      position: relative;
+      display: block;
+      text-wrap: balance;
+    }
+
+    .title .g:last-child {
+      color: var(--green);
+      text-shadow: 0 0 10px rgba(57, 255, 136, .9), 0 0 36px rgba(57, 255, 136, .5), 0 0 90px rgba(57, 255, 136, .25);
+    }
+
+    /* Periodic RGB-split glitch slices */
+    .title .g::before,
+    .title .g::after {
+      content: attr(data-text);
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      text-shadow: none;
+      clip-path: inset(0 0 100% 0);
+    }
+
+    .title .g::before {
+      color: var(--cyan);
+      transform: translate(-4px, 0);
+      animation: glitch-a 5.5s infinite steps(1);
+    }
+
+    .title .g::after {
+      color: var(--amber);
+      transform: translate(4px, 0);
+      animation: glitch-b 5.5s infinite steps(1) .15s;
+    }
+
+    .sub {
+      margin: 26px 0 0;
+      font: clamp(12px, 3.3vw, 18px)/1.5 var(--mono);
+      letter-spacing: .08em;
+      color: var(--text);
+    }
+
+    .type {
+      display: inline-block;
+      max-width: 100%;
+      overflow: hidden;
+      white-space: nowrap;
+      vertical-align: bottom;
+      width: calc(35 * (1ch + .08em));
+      border-right: 2px solid var(--green);
+      animation: typing 2.8s steps(35) .5s both, caret .8s steps(1) infinite;
+    }
+
+    .lore {
+      max-width: 62ch;
+      margin: 18px 0 0;
+      color: var(--dim);
+      font-size: 14px;
+    }
+
+    /* ---------- GAME MENU ---------- */
+    .menu {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      gap: 12px;
+      width: min(440px, 100%);
+      margin-top: 40px;
+    }
+
+    .menu__item {
+      --c: var(--cyan);
+      position: relative;
+      pointer-events: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      margin: 0;
+      appearance: none;
+      cursor: pointer;
+      min-height: 56px;
+      padding: 14px 44px;
+      font: 700 clamp(13px, 1.9vw, 17px)/1.3 var(--head);
+      letter-spacing: .2em;
+      text-align: center;
+      color: var(--c);
+      background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--c) 8%, transparent) 50%, transparent), rgba(10, 17, 29, .6);
+      border: 1px solid color-mix(in srgb, var(--c) 45%, transparent);
+      border-left: 3px solid var(--c);
+      border-radius: 0;
+      text-shadow: 0 0 10px color-mix(in srgb, var(--c) 70%, transparent);
+      transition: transform .18s, background .18s, box-shadow .18s, color .18s, letter-spacing .18s;
+    }
+
+    .menu__item::before {
+      content: "\25B6";
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      font-size: 12px;
+      color: var(--amber);
+      text-shadow: none;
+      opacity: 0;
+      transform: translate(-8px, -50%);
+      transition: .18s;
+    }
+
+    .menu__item:not([aria-disabled="true"]):hover,
+    .menu__item:not([aria-disabled="true"]):focus-visible {
+      color: #fff;
+      letter-spacing: .24em;
+      transform: translateX(6px);
+      background: linear-gradient(90deg, color-mix(in srgb, var(--c) 30%, transparent), color-mix(in srgb, var(--c) 8%, transparent)), rgba(10, 17, 29, .85);
+      box-shadow: 0 0 24px color-mix(in srgb, var(--c) 70%, transparent), inset 0 0 18px color-mix(in srgb, var(--c) 22%, transparent);
+    }
+
+    .menu__item:not([aria-disabled="true"]):hover::before,
+    .menu__item:not([aria-disabled="true"]):focus-visible::before {
+      opacity: 1;
+      transform: translate(0, -50%);
+    }
+
+    .menu__item:not([aria-disabled="true"]):active {
+      transform: translateX(6px) scale(.98);
+    }
+
+    .menu__item--primary {
+      --c: var(--green);
+      animation: cta-pulse 2.4s ease-in-out infinite;
+    }
+
+    .menu__item--quit {
+      --c: var(--red);
+    }
+
+    /* Prevent animation while disabled (e.g., during 2s message display) */
+    .menu__item[aria-disabled="true"] {
+      cursor: default;
+      animation: none;
+    }
+
+    /* ---------- ABOUT DIALOG ---------- */
+    .about {
+      width: min(560px, calc(100% - 32px));
+      max-height: calc(100vh - 48px);
+      padding: 0;
+      color: var(--text);
+      font: 14px/1.6 var(--mono);
+      background: linear-gradient(160deg, var(--bg-2), var(--bg-1));
+      border: 1px solid rgba(56, 217, 255, .5);
+      border-left: 4px solid var(--green);
+      box-shadow: 0 0 40px rgba(56, 217, 255, .25), inset 0 0 26px rgba(56, 217, 255, .05);
+    }
+
+    .about::backdrop {
+      background: rgba(2, 5, 10, .8);
+      -webkit-backdrop-filter: blur(3px);
+      backdrop-filter: blur(3px);
+    }
+
+    .about__body {
+      display: grid;
+      gap: 16px;
+      padding: 24px 26px;
+    }
+
+    .about h2 {
+      margin: 0;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+      font: 700 14px/1.5 var(--head);
+      letter-spacing: .16em;
+      color: var(--green);
+      text-shadow: 0 0 10px rgba(57, 255, 136, .7);
+    }
+
+    .about h3 {
+      margin: 0 0 4px;
+      font: 12px/1.5 var(--mono);
+      letter-spacing: .2em;
+      color: var(--cyan);
+      text-transform: uppercase;
+    }
+
+    .about p {
+      margin: 0;
+      color: var(--dim);
+    }
+
+    .about__list {
+      display: grid;
+      grid-template-columns: max-content minmax(0, 1fr);
+      gap: 12px 22px;
+      margin: 0;
+    }
+
+    .about__list dt {
+      font: 12px/1.6 var(--mono);
+      letter-spacing: .2em;
+      color: var(--cyan);
+      text-transform: uppercase;
+    }
+
+    .about__list dd {
+      margin: 0;
+      color: #fff;
+      overflow-wrap: anywhere;
+    }
+
+    .about__close {
+      justify-self: end;
+      padding: 8px 18px;
+      font: 700 12px var(--head);
+      letter-spacing: .16em;
+      color: var(--cyan);
+      background: transparent;
+      border: 1px solid var(--cyan);
+      cursor: pointer;
+    }
+
+    .about__close:hover,
+    .about__close:focus-visible {
+      background: rgba(56, 217, 255, .18);
+      color: #fff;
+    }
+
+    .hint {
+      margin: 22px 0 0;
+      font-size: 12px;
+      letter-spacing: .24em;
+      color: var(--dim);
+    }
+
+    .hint kbd {
+      padding: 1px 8px;
+      font: inherit;
+      color: var(--cyan);
+      border: 1px solid var(--cyan);
+    }
+
+    /* ---------- AUTHORIZED DATABANKS ---------- */
+    .intel {
+      padding-top: 34px;
+    }
+
+    .intel__head {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+      margin-bottom: 26px;
+    }
+
+    .intel__head h2 {
+      margin: 0;
+      font: 700 14px/1.5 var(--head);
+      letter-spacing: .3em;
+      color: var(--green);
+      text-shadow: 0 0 10px rgba(57, 255, 136, .7);
+    }
+
+    .intel__head h2::before {
+      content: "▣ ";
+    }
+
+    .intel__head::after {
+      content: "";
+      flex: 1 1 60px;
+      height: 1px;
+      order: 2;
+      background: linear-gradient(90deg, var(--green), rgba(56, 217, 255, .25), transparent);
+    }
+
+    .intel__head span {
+      order: 3;
+      font-size: 12px;
+      letter-spacing: .12em;
+      color: var(--dim);
+    }
+
+    .intel__grid {
+      display: grid;
+      gap: 22px;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+
+    .bank {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-height: 250px;
+      padding: 22px 22px 18px;
+      overflow: hidden;
+      isolation: isolate;
+      background: linear-gradient(160deg, rgba(16, 26, 43, .74), rgba(10, 17, 29, .52));
+      -webkit-backdrop-filter: blur(10px) saturate(1.25);
+      backdrop-filter: blur(10px) saturate(1.25);
+      border: 1px solid rgba(56, 217, 255, .38);
+      box-shadow: inset 0 0 28px rgba(56, 217, 255, .05), 0 10px 30px rgba(0, 0, 0, .35);
+      transition: transform .25s, border-color .25s, box-shadow .25s, background .25s;
+    }
+
+    /* Scan beam effect */
+    .bank::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: -40%;
+      height: 40%;
+      z-index: -1;
+      opacity: 0;
+      pointer-events: none;
+      background: linear-gradient(180deg, transparent, rgba(255, 176, 46, .22) 70%, rgba(255, 176, 46, .65) 98%, transparent);
+    }
+
+    /* Target-lock brackets */
+    .bank::after {
+      content: "";
+      position: absolute;
+      inset: 8px;
+      pointer-events: none;
+      opacity: .0;
+      transition: opacity .25s, inset .25s;
+      background:
+        linear-gradient(var(--amber), var(--amber)) top left / 18px 2px no-repeat, linear-gradient(var(--amber), var(--amber)) top left / 2px 18px no-repeat,
+        linear-gradient(var(--amber), var(--amber)) top right / 18px 2px no-repeat, linear-gradient(var(--amber), var(--amber)) top right / 2px 18px no-repeat,
+        linear-gradient(var(--amber), var(--amber)) bottom left / 18px 2px no-repeat, linear-gradient(var(--amber), var(--amber)) bottom left / 2px 18px no-repeat,
+        linear-gradient(var(--amber), var(--amber)) bottom right / 18px 2px no-repeat, linear-gradient(var(--amber), var(--amber)) bottom right / 2px 18px no-repeat;
+    }
+
+    .bank:hover,
+    .bank:focus-visible {
+      transform: translateY(-8px);
+      border-color: var(--amber);
+      outline: none;
+      background: linear-gradient(160deg, rgba(30, 24, 16, .78), rgba(10, 17, 29, .6));
+      box-shadow: 0 0 0 1px rgba(255, 176, 46, .35), 0 0 28px rgba(255, 176, 46, .35), 0 18px 40px rgba(0, 0, 0, .5);
+    }
+
+    .bank:hover::before,
+    .bank:focus-visible::before {
+      opacity: 1;
+      animation: scan 1.3s linear infinite;
+    }
+
+    .bank:hover::after,
+    .bank:focus-visible::after {
+      opacity: 1;
+      inset: 12px;
+    }
+
+    .bank__top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: nowrap;
+      font-size: 12px;
+      letter-spacing: .12em;
+      white-space: nowrap;
+    }
+
+    .bank__id {
+      color: var(--cyan);
+      transition: color .2s;
+    }
+
+    /* “Scanning” indicator, no layout shift */
+    .bank:hover .bank__id::before,
+    .bank:focus-visible .bank__id::before {
+      content: "● ";
+      color: var(--amber);
+      animation: blink .6s steps(1) infinite;
+    }
+
+    .bank:hover .bank__id,
+    .bank:focus-visible .bank__id {
+      color: var(--amber);
+    }
+
+    .bank__tag {
+      padding: 0 8px;
+      color: var(--green);
+      border: 1px solid rgba(57, 255, 136, .55);
+    }
+
+    .bank__tag--earth {
+      color: var(--amber);
+      border-color: rgba(255, 176, 46, .6);
+    }
+
+    .bank__ico {
+      width: 40px;
+      height: 40px;
+      fill: none;
+      stroke: var(--cyan);
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      filter: drop-shadow(0 0 6px rgba(56, 217, 255, .7));
+      transition: stroke .25s, filter .25s;
+    }
+
+    .bank:hover .bank__ico,
+    .bank:focus-visible .bank__ico {
+      stroke: var(--amber);
+      filter: drop-shadow(0 0 8px rgba(255, 176, 46, .85));
+    }
+
+    .bank h3 {
+      margin: 0;
+      font: 700 16px/1.35 var(--head);
+      letter-spacing: .05em;
+      color: #fff;
+    }
+
+    .bank p {
+      margin: 0;
+      flex: 1;
+      font-size: 14px;
+      line-height: 1.55;
+      color: var(--dim);
+    }
+
+    .bank__foot {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+      font-size: 12px;
+      letter-spacing: .08em;
+      color: var(--dim);
+    }
+
+    .bank__foot > span:first-child {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .bank__go {
+      flex: none;
+      color: var(--green);
+      font-family: var(--head);
+      font-weight: 700;
+      letter-spacing: .14em;
+      white-space: nowrap;
+      transition: color .2s, transform .2s;
+    }
+
+    .bank:hover .bank__go,
+    .bank:focus-visible .bank__go {
+      color: var(--amber);
+      transform: translateX(4px);
+    }
+
+    /* ---------- FOOTER ---------- */
+    .foot {
+      width: min(1240px, 100%);
+      margin: 0 auto;
+      padding: 18px 24px 34px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 8px 24px;
+      border-top: 1px solid var(--line);
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--dim);
+    }
+
+    /* ---------- ANIMATIONS ---------- */
+    @keyframes blink {
+      50% { opacity: .25; }
+    }
+    @keyframes caret {
+      50% { border-color: transparent; }
+    }
+    @keyframes typing {
+      from { width: 0; }
+    }
+    @keyframes grid-drift {
+      to { transform: translateY(56px); }
+    }
+    @keyframes twinkle {
+      0% { opacity: .55; }
+      100% { opacity: 1; }
+    }
+    @keyframes flicker {
+      0%, 93%, 100% { opacity: 1; }
+      94% { opacity: .78; }
+      95% { opacity: 1; }
+      96% { opacity: .6; }
+      97% { opacity: 1; }
+    }
+    @keyframes glitch-a {
+      0%, 90%, 100% { clip-path: inset(0 0 100% 0); }
+      91% { clip-path: inset(8% 0 62% 0); }
+      93% { clip-path: inset(58% 0 12% 0); }
+      95% { clip-path: inset(30% 0 44% 0); }
+      97% { clip-path: inset(0 0 100% 0); }
+    }
+    @keyframes glitch-b {
+      0%, 90%, 100% { clip-path: inset(0 0 100% 0); }
+      92% { clip-path: inset(48% 0 22% 0); }
+      94% { clip-path: inset(12% 0 64% 0); }
+      96% { clip-path: inset(70% 0 6% 0); }
+      98% { clip-path: inset(0 0 100% 0); }
+    }
+    @keyframes cta-pulse {
+      0%, 100% { box-shadow: 0 0 18px rgba(57, 255, 136, .4), inset 0 0 22px rgba(57, 255, 136, .14); }
+      50% { box-shadow: 0 0 44px rgba(57, 255, 136, .85), 0 0 90px rgba(57, 255, 136, .35), inset 0 0 34px rgba(57, 255, 136, .28); }
+    }
+    @keyframes scan {
+      from { transform: translateY(0); }
+      to { transform: translateY(350%); }
+    }
+
+    /* ---------- RESPONSIVE STYLES ---------- */
+    @media (max-width: 720px) {
+      .strip { padding: 22px 22px 0; }
+      .frame { inset: 8px; }
+      .menu__item { padding: 14px 36px; letter-spacing: .14em; }
+      .hero { padding-top: 24px; }
+      .about__list { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+      .about__list dd { margin-bottom: 10px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+      .type { width: auto; border-right: 0; }
+    }
+  </style>
+  
+  <!-- External Script -->
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+
+  <!-- ================= BACKGROUND LAYERS ================= -->
+  <div class="bg" aria-hidden="true">
+    <div class="bg__grid"></div>
+    <div class="bg__stars"></div>
+    <div class="bg__planet"></div>
+    <div class="bg__vignette"></div>
+  </div>
+  
+  <audio id="ambience" src="martian_wind.mp3" loop preload="auto" hidden></audio>
+  
+  <div class="frame" aria-hidden="true">
+    <i></i><i></i><i></i><i></i>
+  </div>
+
+  <!-- ================= TOP STATUS ================= -->
+  <header class="strip">
+    <span>ARES-1 PROGRAM // CLASSIFIED</span>
+    <b>SECURE CHANNEL · ENCRYPTED</b>
+  </header>
+
+  <!-- ================= MAIN CONTENT ================= -->
+  <main>
+    
+    <!-- SECTION A: HERO & MENU -->
+    <section class="hero" aria-labelledby="title">
+      <p class="eyebrow">◢ EYES ONLY · COMMANDER BRIEFING ◣</p>
+      <h1 class="title" id="title">
+        <span class="g" data-text="INTERPLANETARY SURVIVAL GUIDE:">INTERPLANETARY SURVIVAL GUIDE:</span>
+        <span class="g" data-text="SEID MARS APP">SEID MARS APP</span>
+      </h1>
+      <p class="sub"><span class="type">Awaiting Commander Authorization...</span></p>
+      <p class="lore">The habitat is sealed. The dust is rising. Every route, every hazard and every crew vital is waiting on the HUD. Mars gives no second chances.</p>
+
+      <!-- Game Menu (Wired via JavaScript) -->
+      <nav class="menu" aria-label="Main menu">
+        <button type="button" class="menu__item menu__item--primary" id="btn-start">
+          <span class="menu__label">[ START NEW CAMPAIGN ]</span>
+        </button>
+        <button type="button" class="menu__item" id="btn-load">
+          <span class="menu__label">[ LOAD ARCHIVED MISSION ]</span>
+        </button>
+        <button type="button" class="menu__item" id="btn-export">
+          <span class="menu__label">[ EXPORT SAVE DATA ]</span>
+        </button>
+        <button type="button" class="menu__item" id="btn-config">
+          <span class="menu__label">[ SYSTEM CONFIG &amp; CREDITS ]</span>
+        </button>
+        <button type="button" class="menu__item menu__item--quit" id="btn-quit">
+          <span class="menu__label">[ TERMINATE LINK // QUIT ]</span>
+        </button>
+      </nav>
+      
+      <p class="hint"><kbd>&#8593;</kbd> <kbd>&#8595;</kbd> NAVIGATE &nbsp;·&nbsp; <kbd>ENTER</kbd> SELECT</p>
+    </section>
+
+    <!-- SECTION B: INTEL ARCHIVES -->
+    <section class="intel" aria-labelledby="intel-h">
+      <div class="intel__head">
+        <h2 id="intel-h">AUTHORIZED DATABANKS</h2>
+        <span>4 SOURCES · OPEN IN A NEW TAB</span>
+      </div>
+
+      <div class="intel__grid">
+        <!-- Databank 1 -->
+        <a class="bank" href="https://trek.nasa.gov/mars/" target="_blank" rel="noopener noreferrer" aria-label="JPL Mars Trek — opens NASA's Mars Trek portal in a new tab">
+          <div class="bank__top">
+            <span class="bank__id">INTEL-01</span>
+            <span class="bank__tag">ORBITAL · MARS</span>
+          </div>
+          <svg class="bank__ico" viewBox="0 0 48 48" aria-hidden="true">
+            <circle cx="24" cy="24" r="17"/>
+            <ellipse cx="24" cy="24" rx="7" ry="17"/>
+            <path d="M7 24h34M10 14h28M10 34h28"/>
+            <path d="M24 2v6M24 40v6M2 24h6M40 24h6"/>
+          </svg>
+          <h3>JPL Mars Trek</h3>
+          <p>Interactive 3D portal for mission pathfinding and orbital reconnaissance.</p>
+          <div class="bank__foot">
+            <span>trek.nasa.gov</span>
+            <span class="bank__go">ACCESS ▸ ↗</span>
+          </div>
+        </a>
+
+        <!-- Databank 2 -->
+        <a class="bank" href="https://www.usgs.gov/centers/astrogeology-science-center/maps" target="_blank" rel="noopener noreferrer" aria-label="USGS Planetary Geologic Mapping — opens the USGS Astrogeology maps page in a new tab">
+          <div class="bank__top">
+            <span class="bank__id">INTEL-02</span>
+            <span class="bank__tag">GEOLOGY · MARS</span>
+          </div>
+          <svg class="bank__ico" viewBox="0 0 48 48" aria-hidden="true">
+            <path d="M24 6l18 9-18 9-18-9z"/>
+            <path d="M6 24l18 9 18-9"/>
+            <path d="M6 33l18 9 18-9"/>
+          </svg>
+          <h3>USGS Planetary Geologic Mapping</h3>
+          <p>Topographical and standardized geologic surface hazard maps.</p>
+          <div class="bank__foot">
+            <span>usgs.gov</span>
+            <span class="bank__go">ACCESS ▸ ↗</span>
+          </div>
+        </a>
+
+        <!-- Databank 3 -->
+        <a class="bank" href="https://worldview.earthdata.nasa.gov/" target="_blank" rel="noopener noreferrer" aria-label="NASA Worldview — opens NASA's Earth satellite imagery visualizer in a new tab">
+          <div class="bank__top">
+            <span class="bank__id">INTEL-03</span>
+            <span class="bank__tag bank__tag--earth">EARTH ANALOG</span>
+          </div>
+          <svg class="bank__ico" viewBox="0 0 48 48" aria-hidden="true">
+            <ellipse cx="24" cy="24" rx="19" ry="8" transform="rotate(-28 24 24)"/>
+            <circle cx="24" cy="24" r="6"/>
+            <circle cx="40" cy="14" r="2.4"/>
+            <path d="M24 4v4M24 40v4"/>
+          </svg>
+          <h3>NASA Worldview</h3>
+          <p>Satellite visualizer for past and present dynamic planetary events.</p>
+          <div class="bank__foot">
+            <span>NASA Earthdata</span>
+            <span class="bank__go">ACCESS ▸ ↗</span>
+          </div>
+        </a>
+
+        <!-- Databank 4 -->
+        <a class="bank" href="https://mars.nasa.gov/mars2020/multimedia/raw-images/" target="_blank" rel="noopener noreferrer" aria-label="Perseverance Raw Intel — opens the Mars 2020 raw image gallery in a new tab">
+          <div class="bank__top">
+            <span class="bank__id">INTEL-04</span>
+            <span class="bank__tag">SURFACE · MARS</span>
+          </div>
+          <svg class="bank__ico" viewBox="0 0 48 48" aria-hidden="true">
+            <rect x="6" y="14" width="36" height="24" rx="3"/>
+            <circle cx="24" cy="26" r="7"/>
+            <circle cx="24" cy="26" r="2.5"/>
+            <path d="M16 14l3-5h10l3 5"/>
+          </svg>
+          <h3>Perseverance Raw Intel</h3>
+          <p>Surface-level raw image gallery captured by the rover network.</p>
+          <div class="bank__foot">
+            <span>mars.nasa.gov</span>
+            <span class="bank__go">ACCESS ▸ ↗</span>
+          </div>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="foot">
+    <span>ARES-1 HABITAT · DEEP-SPACE SURVIVAL MATRIX</span>
+    <span>NASA, JPL and USGS resources belong to their owners. This hackathon project is not affiliated with or endorsed by NASA or the USGS.</span>
+  </footer>
+
+  <!-- ================= ABOUT DIALOG ================= -->
+  <dialog class="about" id="about" aria-labelledby="about-h">
+    <div class="about__body">
+      <h2 id="about-h">SYSTEM CONFIG &amp; CREDITS</h2>
+      <dl class="about__list">
+        <dt>Team name</dt><dd>Enlight (Science, Engineering, & Intelligence Department)</dd>
+        <dt>Project</dt><dd>SEID Mars Map</dd>
+        <dt>Team leader</dt><dd>Alexander Oh Ting Wei</dd>
+        <dt>Members</dt><dd>Celestina Ong Ying Xuan, Yan Lai Hong, Jordan Beh Jian Xiang</dd>
+        <dt>Event</dt><dd>NASA Space Apps Challenge 2026</dd>
+      </dl>
+      <button type="button" class="about__close" id="about-close">CLOSE</button>
+    </div>
+  </dialog>
+
+  <!-- ================= MAIN APPLICATION SCRIPT ================= -->
+  <script>
+    (function () {
+      'use strict';
+      
+      // --- Configuration & DOM Elements ---
+      var RED = '#ff3b57';
+      var GREEN = '#39ff88';
+      var buttons = [].slice.call(document.querySelectorAll('.menu__item'));
+      var dlg = document.getElementById('about');
+      var quitting = false;
+      var lastFocus = buttons[0];
+      
+      var $ = function (id) {
+        return document.getElementById(id);
+      };
+
+      // --- Audio & Voice Feedback Setup ---
+      var audio = $('ambience');
+      if (audio) {
+        audio.volume = 0.35;
+      }
+
+      var voices = [];
+      
+      function loadVoices() {
+        if ('speechSynthesis' in window) {
+          voices = window.speechSynthesis.getVoices();
+        }
+      }
+      
+      loadVoices();
+      
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.addEventListener('voiceschanged', loadVoices);
+      }
+      
+      function speak(text) {
+        if (!('speechSynthesis' in window)) return;
+        try {
+          window.speechSynthesis.cancel();
+          var u = new SpeechSynthesisUtterance(text);
+          u.lang = 'en-US';
+          u.rate = 0.85; 
+          u.pitch = 0.5; 
+          u.volume = 1; // Slow + low pitch = robotic voice
+          
+          var en = voices.filter(function (v) { return /^en/i.test(v.lang); });
+          var pick = en.filter(function (v) { return /david|mark|alex|daniel|google us english/i.test(v.name); })[0] || en[0];
+          
+          if (pick) {
+            u.voice = pick;
+          }
+          window.speechSynthesis.speak(u);
+        } catch (e) {
+          console.error('Speech synthesis error:', e);
+        }
+      }
+
+      // Start background ambience on the first user interaction
+      var gestures = ['pointerdown', 'keydown', 'touchstart'];
+      
+      function stopListening() {
+        gestures.forEach(function (g) {
+          document.removeEventListener(g, startAmbience, true);
+        });
+      }
+      
+      function startAmbience() {
+        if (!audio) {
+          return stopListening();
+        }
+        var p = audio.play();
+        if (p && p.then) {
+          p.then(stopListening).catch(function (err) {
+            // E.g., martian_wind.mp3 missing: give up quietly
+            if (!err || err.name !== 'NotAllowedError') stopListening();
+            // NotAllowedError: try again on the next gesture
+          });
+        } else {
+          stopListening();
+        }
+      }
+      
+      gestures.forEach(function (g) {
+        document.addEventListener(g, startAmbience, true);
+      });
+
+      // --- Helper Functions ---
+      buttons.forEach(function (b) {
+        // Store original text to restore after message flash
+        b.dataset.label = b.querySelector('.menu__label').textContent;
+        b.addEventListener('focus', function () {
+          lastFocus = b;
+        });
+      });
+
+      // Flashes a temporary status message on a button
+      function flash(btn, text, color) {
+        var label = btn.querySelector('.menu__label');
+        clearTimeout(btn._t);
+        label.textContent = text;
+        btn.style.setProperty('--c', color);
+        btn.style.color = color;
+        btn.setAttribute('aria-disabled', 'true');
+        
+        btn._t = setTimeout(function () {
+          label.textContent = btn.dataset.label;
+          btn.style.removeProperty('--c');
+          btn.style.removeProperty('color');
+          btn.removeAttribute('aria-disabled');
+        }, 2000);
+      }
+      
+      // Binds click events to buttons
+      function on(id, fn) {
+        var btn = $(id);
+        btn.addEventListener('click', function () {
+          if (!quitting && btn.getAttribute('aria-disabled') !== 'true') {
+            fn(btn);
+          }
+        });
+      }
+      
+      // Safely reads from localStorage
+      function read(key) {
+        try {
+          return localStorage.getItem(key);
+        } catch (e) {
+          return null;
+        }
+      }
+
+      // --- Menu Actions ---
+
+      // 1. START NEW CAMPAIGN
+      on('btn-start', function () {
+        try {
+          localStorage.clear();
+          sessionStorage.clear();
+        } catch (e) {}
+        window.location.href = 'campaign.html';
+      });
+
+      // 2. LOAD ARCHIVED MISSION
+      on('btn-load', function (btn) {
+        if (!read('ares1.o2')) {
+          flash(btn, '[ ERROR: NO LOCAL ARCHIVE FOUND ]', RED);
+          speak('Warning. No local archive found.');
+        } else {
+          window.location.href = 'weather.html';
+        }
+      });
+
+      // 3. EXPORT SAVE DATA -> SEID_Ares1_Telemetry_Log.xlsx
+      on('btn-export', function (btn) {
+        var v = {
+          hr: read('ares1.hr'),
+          bp: read('ares1.bp'),
+          temp: read('ares1.temp'),
+          o2: read('ares1.o2'),
+          status: read('ares1.status')
+        };
+        
+        if (Object.keys(v).every(function (k) { return v[k] === null; })) {
+          return flash(btn, '[ ERROR: NO LOCAL ARCHIVE FOUND ]', RED);
+        }
+        if (typeof XLSX === 'undefined') {
+          return flash(btn, '[ ERROR: EXPORT LIBRARY OFFLINE ]', RED);
+        }
+
+        var num = function (x) {
+          var n = parseFloat(x);
+          return x === null ? 'N/A' : isNaN(n) ? x : n;
+        };
+        
+        var rows = [
+          { 'Telemetry Metric': 'Heart Rate (BPM)',        'Recorded Value': num(v.hr),                         'Nominal Range': '60 - 100' },
+          { 'Telemetry Metric': 'Blood Pressure (mmHg)',   'Recorded Value': v.bp === null ? 'N/A' : v.bp,      'Nominal Range': 'Systolic < 130' },
+          { 'Telemetry Metric': 'Body Temperature (°C)',   'Recorded Value': num(v.temp),                       'Nominal Range': '36.1 - 37.2' },
+          { 'Telemetry Metric': 'Oxygen Reserve (%)',      'Recorded Value': num(v.o2),                         'Nominal Range': '> 95' },
+          { 'Telemetry Metric': 'Telemetry Status',        'Recorded Value': v.status === null ? 'N/A' : v.status, 'Nominal Range': 'OPTIMAL / ACTIVE' }
+        ];
+
+        // Format worksheet headers
+        var ws = XLSX.utils.aoa_to_sheet([
+          ['NASA SPACE APPS CHALLENGE 2026 · TEAM ENLIGHT'],
+          ['SEID MARS MAP · ARES-1 CREW TELEMETRY LOG'],
+          ['Log generated (UTC)', new Date().toUTCString()],
+          ['Source', 'Local mission archive (browser storage)'],
+          []
+        ]);
+        
+        XLSX.utils.sheet_add_json(ws, rows, { origin: 'A6', header: ['Telemetry Metric', 'Recorded Value', 'Nominal Range'] });
+        ws['!cols'] = [{ wch: 28 }, { wch: 24 }, { wch: 22 }];
+        ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 2 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } }];
+
+        var wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Telemetry Log');
+        XLSX.writeFile(wb, 'SEID_Ares1_Telemetry_Log.xlsx');
+        
+        flash(btn, '[ TELEMETRY LOG EXPORTED ]', GREEN);
+      });
+
+      // 4. SYSTEM CONFIG & CREDITS
+      on('btn-config', function () {
+        if (typeof dlg.showModal === 'function') {
+          dlg.showModal();
+        } else {
+          dlg.setAttribute('open', '');
+        }
+      });
+      
+      $('about-close').addEventListener('click', function () {
+        dlg.close();
+      });
+      
+      // Close dialog when clicking on the backdrop
+      dlg.addEventListener('click', function (e) {
+        if (e.target === dlg) {
+          dlg.close();
+        }
+      });
+
+      // 5. TERMINATE LINK // QUIT
+      on('btn-quit', function () {
+        quitting = true;
+        var body = document.body;
+        
+        // Disable interactions and start blackout animation
+        body.style.pointerEvents = 'none';
+        body.style.transition = 'opacity 2s ease-in';
+        body.style.opacity = '0';
+        
+        // Fade out audio
+        if (audio) {
+          var fade = setInterval(function () {
+            audio.volume = Math.max(0, audio.volume - 0.03);
+            if (audio.volume === 0) {
+              audio.pause();
+              clearInterval(fade);
+            }
+          }, 160);
+        }
+        
+        // Attempt to close window or show fallback message
+        setTimeout(function () {
+          window.close();
+          setTimeout(function () {
+            body.style.transition = 'none';
+            body.style.opacity = '1';
+            body.style.pointerEvents = '';
+            document.body.innerHTML = '<div style="display:flex; height:100vh; align-items:center; justify-content:center; color:red; font-family:monospace; font-size:24px; background:black;">SYSTEM OFFLINE. SAFE TO CLOSE BROWSER.</div>';
+          }, 100);
+        }, 2000);
+      });
+
+      // --- Global Keyboard Navigation ---
+      document.addEventListener('keydown', function (e) {
+        if (quitting || dlg.open || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+        
+        var active = document.activeElement;
+        var i = buttons.indexOf(active);
+
+        // Arrow Key Navigation
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (i === -1) {
+            i = buttons.indexOf(lastFocus);
+          }
+          var nextIndex = (i + (e.key === 'ArrowDown' ? 1 : -1) + buttons.length) % buttons.length;
+          buttons[nextIndex].focus();
+        } 
+        // Enter Key Selection
+        else if (e.key === 'Enter' && (i !== -1 || active === document.body)) {
+          e.preventDefault(); // Stop native click behavior
+          if (!e.repeat) {
+            (i !== -1 ? active : lastFocus).click();
+          }
+        }
+      });
+
+      // Initialize focus
+      buttons[0].focus({ preventScroll: true });
+      
+    })();
+  </script>
+</body>
+</html>
